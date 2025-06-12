@@ -21,18 +21,18 @@ The model is deployed with a clean, interactive UI using **Streamlit**, making i
 ---
 
 ## 📁 Project Structure
-'''bash
-image-classifier/
-├── data/ # Training/validation datasets (organized per class)
-├── models/ # Trained model files (saved in HDF5/TF format)
-├── notebooks/ # Jupyter Notebooks for EDA and model training
-├── streamlit_app/ # Streamlit app files
-│ ├── app.py
-│ └── utils.py
-├── requirements.txt
-└── README.md
-
-
+1. **Structure**
+   ```bash
+   image-classifier/
+   ├── data/ # Training/validation datasets (organized per class)
+   ├── models/ # Trained model files (saved in HDF5/TF format)
+   ├── notebooks/ # Jupyter Notebooks for EDA and model training
+   ├── streamlit_app/ # Streamlit app files
+   │ ├── app.py
+   │ └── utils.py
+   ├── requirements.txt
+   └── README.md
+   
 ---
 
 ## 🔧 Tech Stack
@@ -48,18 +48,20 @@ image-classifier/
 ## 🧪 Dataset
 
 The dataset should be organized into separate folders for each category under the `data/` directory, e.g.:
-'''bash
-data/
-├── plant/
-│ ├── poisonous/
-│ └── non_poisonous/
-├── waste/
-│ ├── organic/
-│ ├── recyclable/
-│ └── hazardous/
-├── food/
-│ ├── healthy/
-│ └── unhealthy/
+
+1. **Structure on data**
+   ```bash
+   data/
+   ├── plant/
+   │ ├── poisonous/
+   │ └── non_poisonous/
+   ├── waste/
+   │ ├── organic/
+   │ ├── recyclable/
+   │ └── hazardous/
+   ├── food/
+   │ ├── healthy/
+   │ └── unhealthy/
 
 You can use or adapt publicly available datasets like:
 - [Kaggle Plant Seedlings](https://www.kaggle.com/c/plant-seedlings-classification)
@@ -72,7 +74,7 @@ You can use or adapt publicly available datasets like:
 
 1. **Clone this repository**
    ```bash
-   git clone https://github.com/yourusername/image-classifier.git
+   [git clone https://github.com/yourusername/image-classifier.git](https://github.com/rhaffle87/AI-Garbage-Classifier.git)
    cd image-classifier
    
 2. **Install dependencies**
@@ -105,9 +107,6 @@ We welcome contributions! Whether you're fixing bugs, improving performance, or 
 ## 📚 Related Repositories
 - 🔗 davidsandberg/facenet – image embeddings
 - 🔗 MLH-Fellowship/plant-disease-detector – plant disease detection
-
-## 📄 License
-This project is licensed under the MIT License. See the LICENSE file for details.
 
 ## ✨ Acknowledgements
 - TensorFlow/Keras Documentation
