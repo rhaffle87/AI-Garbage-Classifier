@@ -21,6 +21,7 @@ The model is deployed with a clean, interactive UI using **Streamlit**, making i
 ---
 
 ## 📁 Project Structure
+'''bash
 image-classifier/
 ├── data/ # Training/validation datasets (organized per class)
 ├── models/ # Trained model files (saved in HDF5/TF format)
@@ -47,7 +48,7 @@ image-classifier/
 ## 🧪 Dataset
 
 The dataset should be organized into separate folders for each category under the `data/` directory, e.g.:
-
+'''bash
 data/
 ├── plant/
 │ ├── poisonous/
