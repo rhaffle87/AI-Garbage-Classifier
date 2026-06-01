@@ -118,6 +118,11 @@ def main():
             try:
                 model, history = train_model_pipeline(DATA_DIR, epochs=epochs)
                 st.success("🎉 Model trained successfully and saved to models/garbage_model.keras!")
+                try:
+                    ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+                    subprocess.run([sys.executable, os.path.join(ROOT, 'scripts', 'plot_history.py')], check=True)
+                except Exception as pe:
+                    st.warning(f"Could not generate performance plot: {pe}")
             except Exception as e:
                 st.error(f"Error during training: {e}")
         else:
@@ -194,6 +199,14 @@ def main():
         st.markdown(console_html, unsafe_allow_html=True)
     else:
         st.write("No active logs available. Start training to initialize log output.")
+
+    # Render training performance plot if available
+    ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+    plot_path = os.path.join(ROOT, 'logs', 'training_plot.png')
+    if os.path.exists(plot_path):
+        st.divider()
+        st.markdown("### 📈 Training Results & Performance Curves")
+        st.image(plot_path, use_column_width=True, caption="Training metrics showing accuracy and loss progression.")
 
 if __name__ == "__main__":
     main()

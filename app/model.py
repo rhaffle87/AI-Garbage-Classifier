@@ -155,7 +155,7 @@ def train_model_pipeline(dataset_dir, epochs=10, model_path=None):
     model.save(model_path)
     import logging
     logging.info(f"Model saved to {model_path}")
-    print(f"✅ Model successfully saved to {model_path}")
+    print(f"[SUCCESS] Model successfully saved to {model_path}")
     return model, history
 
 def predict(model, image):

@@ -32,6 +32,12 @@ def main():
                 print(f"- {label}: 0 (directory missing)")
     else:
         train_model_pipeline(args.dataset, epochs=args.epochs, model_path=args.model)
+        try:
+            print("Generating performance plot...")
+            import subprocess
+            subprocess.run([sys.executable, os.path.join(ROOT, 'scripts', 'plot_history.py')], check=True)
+        except Exception as e:
+            print(f"Warning: could not generate plot: {e}")
 
 if __name__ == '__main__':
     main()

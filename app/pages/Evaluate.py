@@ -32,11 +32,16 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-@st.cache_resource
-def get_cached_model():
-    return load_model()
+# Track active model path and modification time to auto-reload if the model changes
+from app.config import MODEL_PATH, LEGACY_MODEL_PATH
+active_path = MODEL_PATH if os.path.exists(MODEL_PATH) else LEGACY_MODEL_PATH
+mtime = os.path.getmtime(active_path) if os.path.exists(active_path) else 0.0
 
-model = get_cached_model()
+@st.cache_resource
+def get_cached_model(path, last_modified):
+    return load_model(path)
+
+model = get_cached_model(active_path, mtime)
 if getattr(model, '_is_fallback', False):
     st.warning("⚠️ No valid saved model found — using a small fallback model. To see meaningful evaluation, please train a model first on the **Train** page.")
     st.stop()
