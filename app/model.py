@@ -152,6 +152,32 @@ def train_model_pipeline(dataset_dir, epochs=10, model_path=None):
         callbacks=[csv_logger, logging_callback]
     )
 
+    # =====================================================================
+    # Stage 2: Fine-Tuning deep MobileNetV2 layers
+    # =====================================================================
+    import logging
+    logging.info("Initiating Stage 2: Fine-tuning base MobileNetV2 layers...")
+    print("\n--- Starting Stage 2: Fine-Tuning Base MobileNetV2 Layers ---")
+    
+    base_model.trainable = True
+    # Freeze the early feature extractor layers, leaving deep layers (100+) trainable
+    for layer in base_model.layers[:100]:
+        layer.trainable = False
+        
+    model.compile(
+        optimizer=tf.keras.optimizers.Adam(learning_rate=1e-5),
+        loss='sparse_categorical_crossentropy',
+        metrics=['accuracy']
+    )
+    
+    fine_tune_epochs = max(2, epochs // 2)
+    history_fine = model.fit(
+        train_generator,
+        validation_data=validation_generator,
+        epochs=fine_tune_epochs,
+        callbacks=[csv_logger, logging_callback]
+    )
+
     model.save(model_path)
     import logging
     logging.info(f"Model saved to {model_path}")

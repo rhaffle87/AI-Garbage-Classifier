@@ -8,12 +8,11 @@ displays probability metrics, and presents recycling instructions.
 import streamlit as st
 import cv2
 import numpy as np
+import os
 from PIL import Image
 from app.model import load_model, predict
 from app.config import CLASS_NAMES
-from app.styles import inject_custom_css
-
-st.set_page_config(page_title="Predict - Garbage Classifier", page_icon="🔮", layout="wide")
+from app.styles import inject_custom_css, get_svg_icon
 
 # Inject premium visual elements
 inject_custom_css()
@@ -29,13 +28,16 @@ def get_cached_model(path, last_modified):
 
 model = get_cached_model(active_path, mtime)
 if getattr(model, '_is_fallback', False):
-    st.warning("⚠️ No valid saved model found — using a small fallback model. For meaningful results, train and save a model first on the Train page.")
+    st.warning("No valid saved model found — using a small fallback model. For meaningful results, train and save a model first on the Train page.")
 
 # Page Header
-st.markdown("""
+st.markdown(f"""
 <div class="header-banner" style="background: linear-gradient(135deg, #0d47a1 0%, #1565c0 50%, #1976d2 100%); box-shadow: 0 10px 30px rgba(13, 71, 161, 0.15);">
-    <h1>🔮 Classify Garbage</h1>
-    <p>Upload a photo or capture a snapshot to instantly identify waste and learn how to recycle it properly.</p>
+    <div style="display: flex; justify-content: center; align-items: center; gap: 16px; margin-bottom: 0.8rem;">
+        {get_svg_icon("camera", size=48, color="#FFFFFF")}
+        <h1 style="margin: 0 !important; color: white !important;">Classify Garbage</h1>
+    </div>
+    <p>Upload a photo or capture a snapshot to identify waste and learn how to recycle it properly.</p>
 </div>
 """, unsafe_allow_html=True)
 
@@ -49,29 +51,38 @@ RECYCLING_TIPS = {
     'trash': "🗑️ **Trash**: This item cannot be recycled with the current sorted streams. Please place it in the general waste bin. Consider composting if it is organic waste."
 }
 
-def display_predictions(probs, image_obj):
+def display_predictions(probs, image_obj, threshold=0.70):
     col1, col2 = st.columns([1.1, 1])
     
     with col1:
-        st.write("#### 📸 Analyzed Visual")
+        st.markdown(f"""
+        <div style="display: flex; align-items: center; gap: 8px; margin-top: 1rem; margin-bottom: 1rem;">
+            {get_svg_icon("camera", size=22, color="#1B5E20")}
+            <h4 style="margin: 0; color: #1B5E20;">Analyzed Visual</h4>
+        </div>
+        """, unsafe_allow_html=True)
         if isinstance(image_obj, Image.Image):
             st.image(image_obj, use_column_width=True)
         else:
             st.image(image_obj, channels="RGB", use_column_width=True)
             
     with col2:
-        st.write("#### 📊 Classification Output")
+        st.markdown(f"""
+        <div style="display: flex; align-items: center; gap: 8px; margin-top: 1rem; margin-bottom: 1rem;">
+            {get_svg_icon("chart", size=22, color="#1B5E20")}
+            <h4 style="margin: 0; color: #1B5E20;">Classification Output</h4>
+        </div>
+        """, unsafe_allow_html=True)
         top_indices = np.argsort(probs)[::-1]
         top_class = CLASS_NAMES[top_indices[0]]
         max_prob = probs[top_indices[0]]
         
         # Render a premium styled card for results
-        confidence_text = f"Confidence: {max_prob*100:.1f}%"
-        if max_prob < 0.50:
-            badge_html = f'<span class="confidence-badge badge-low">⚠️ Low Confidence ({max_prob*100:.1f}%)</span>'
-            status_alert = st.warning(f"The model is slightly unsure, but it's likely **{top_class.title()}**.")
+        if max_prob < threshold:
+            badge_html = f'<span class="confidence-badge badge-low">Low Confidence ({max_prob*100:.1f}%)</span>'
+            status_alert = st.warning(f"The model is unsure, but it's likely **{top_class.title()}**.")
         else:
-            badge_html = f'<span class="confidence-badge badge-high">✅ High Confidence ({max_prob*100:.1f}%)</span>'
+            badge_html = f'<span class="confidence-badge badge-high">High Confidence ({max_prob*100:.1f}%)</span>'
             status_alert = st.success(f"Successfully identified as **{top_class.title()}**!")
 
         st.markdown(f"""
@@ -95,8 +106,34 @@ def display_predictions(probs, image_obj):
             with col_bar:
                 st.progress(prob)
 
-st.write("### Choose Input Source")
-tab1, tab2, tab3 = st.tabs(["📁 Upload Image File", "📸 Webcam Snapshot", "🎥 Live Camera Stream"])
+# Sidebar controls for dynamic inference thresholds
+with st.sidebar:
+    st.markdown(f"""
+    <div style="padding: 10px 0;">
+        <h4 style="margin: 0; color: #1B5E20; display: flex; align-items: center; gap: 8px;">
+            {get_svg_icon("settings", size=20, color="#1B5E20")}
+            <span>Inference Settings</span>
+        </h4>
+        <p style="color: #666; font-size: 0.85rem; margin-top: 5px;">Fine-tune prediction sensitivity and filter out low-confidence hallucinations.</p>
+    </div>
+    """, unsafe_allow_html=True)
+    confidence_threshold = st.slider(
+        "Confidence Threshold",
+        min_value=0.40,
+        max_value=0.95,
+        value=0.70,
+        step=0.05,
+        help="Predictions below this confidence level will be marked as 'Unsure' to prevent false positive classifications on background items."
+    )
+
+st.markdown(f"""
+<div class="flex-header">
+    {get_svg_icon("play", size=28, color="#2E7D32")}
+    <h3 style="color: #1B5E20; font-weight: 600;">Choose Input Source</h3>
+</div>
+""", unsafe_allow_html=True)
+
+tab1, tab2, tab3 = st.tabs(["Upload Image File", "Webcam Snapshot", "Live Camera Stream"])
 
 with tab1:
     st.markdown("""
@@ -106,11 +143,15 @@ with tab1:
     """, unsafe_allow_html=True)
     uploaded_file = st.file_uploader("Choose an image file...", type=["jpg", "jpeg", "png"], label_visibility="collapsed")
     if uploaded_file is not None:
-        with st.spinner("Processing image via neural network..."):
-            image = Image.open(uploaded_file)
-            probs = predict(model, image)
-            st.divider()
-            display_predictions(probs, image)
+        try:
+            with st.spinner("Processing image via neural network..."):
+                image = Image.open(uploaded_file)
+                image.load() # Fully load image data to catch corruptions immediately
+                probs = predict(model, image)
+                st.divider()
+                display_predictions(probs, image, threshold=confidence_threshold)
+        except Exception as e:
+            st.error(f"❌ Could not process uploaded image. The file may be corrupted, truncated, or in an unsupported format. Error detail: {str(e)}")
 
 with tab2:
     st.markdown("""
@@ -118,21 +159,24 @@ with tab2:
         <p style="color: #666; font-size: 0.95rem;">Capture a single photo using your integrated laptop camera or webcam.</p>
     </div>
     """, unsafe_allow_html=True)
-    if st.button("📸 Capture Webcam Photo", use_container_width=True, type="primary"):
+    if st.button("Capture Webcam Photo", use_container_width=True, type="primary"):
         with st.spinner("Activating camera..."):
-            cap = cv2.VideoCapture(0)
-            if not cap.isOpened():
-                st.error("❌ Could not access the webcam. Check camera permissions in your OS/browser.")
-            else:
-                ret, frame = cap.read()
-                cap.release()
-                if not ret:
-                    st.error("❌ Failed to capture image from camera stream.")
+            try:
+                cap = cv2.VideoCapture(0)
+                if not cap.isOpened():
+                    st.error("❌ Could not access the webcam. Check camera permissions or ensure no other app is using the camera.")
                 else:
-                    frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-                    probs = predict(model, frame_rgb)
-                    st.divider()
-                    display_predictions(probs, frame_rgb)
+                    ret, frame = cap.read()
+                    cap.release()
+                    if not ret or frame is None:
+                        st.error("❌ Failed to capture image from camera stream.")
+                    else:
+                        frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                        probs = predict(model, frame_rgb)
+                        st.divider()
+                        display_predictions(probs, frame_rgb, threshold=confidence_threshold)
+            except Exception as ce:
+                st.error(f"❌ Camera access error: {str(ce)}")
 
 with tab3:
     st.markdown("""
@@ -142,38 +186,66 @@ with tab3:
     """, unsafe_allow_html=True)
     try:
         from streamlit_webrtc import webrtc_streamer, VideoTransformerBase
+        import threading
         
         class GarbageTransformer(VideoTransformerBase):
             def __init__(self):
                 super().__init__()
                 self.model = model
                 self.class_names = CLASS_NAMES
+                self.last_preds = None
+                self.is_predicting = False
+                self.threshold = 0.70
+                self.lock = threading.Lock()
+
+            def _async_predict(self, rgb_copy):
+                from app.model import predict
+                try:
+                    preds = predict(self.model, rgb_copy)
+                    with self.lock:
+                        self.last_preds = preds
+                except Exception:
+                    pass
+                finally:
+                    with self.lock:
+                        self.is_predicting = False
 
             def recv(self, frame):
                 import av
                 import cv2
                 import numpy as np
-                from app.model import predict
 
                 img = frame.to_ndarray(format="bgr24")
                 img_h, img_w = img.shape[:2]
                 
-                # Predict class probabilities
-                rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-                try:
-                    preds = predict(self.model, rgb)
+                # Retrieve the latest predictions and busy status under thread lock
+                with self.lock:
+                    preds = self.last_preds
+                    is_busy = self.is_predicting
+                
+                # If the prediction thread is free, spawn a background task on the current frame
+                if not is_busy:
+                    # Convert to RGB and copy image to prevent race conditions on the array buffer
+                    rgb_copy = cv2.cvtColor(img.copy(), cv2.COLOR_BGR2RGB)
+                    with self.lock:
+                        self.is_predicting = True
+                    t = threading.Thread(target=self._async_predict, args=(rgb_copy,))
+                    t.daemon = True
+                    t.start()
+                
+                # Process classification label and border colors based on last predictions
+                if preds is not None:
                     top_idx = int(np.argmax(preds))
                     confidence = float(preds[top_idx])
-                    
-                    if confidence < 0.5:
+                    if confidence < self.threshold:
                         label = f"Unsure ({confidence*100:.1f}%)"
                         color = (0, 165, 255) # Orange in BGR
                     else:
                         label = f"{self.class_names[top_idx].title()}: {confidence*100:.1f}%"
                         color = (0, 255, 0) # Green in BGR
-                except Exception:
+                else:
                     label = "Scanning..."
-                    color = (255, 255, 255)
+                    color = (255, 255, 255) # White in BGR
                     confidence = 0.0
 
                 # Preprocess image to detect foreground objects (contours)
@@ -262,7 +334,9 @@ with tab3:
 
                 return av.VideoFrame.from_ndarray(img, format="bgr24")
 
-        webrtc_streamer(key="garbage-webrtc", video_transformer_factory=GarbageTransformer,
-                        media_stream_constraints={"video": True, "audio": False})
+        ctx = webrtc_streamer(key="garbage-webrtc", video_transformer_factory=GarbageTransformer,
+                              media_stream_constraints={"video": True, "audio": False})
+        if ctx.video_transformer is not None:
+            ctx.video_transformer.threshold = confidence_threshold
     except Exception:
         st.error("`streamlit-webrtc` is not fully configured or installed. Please verify installation packages.")

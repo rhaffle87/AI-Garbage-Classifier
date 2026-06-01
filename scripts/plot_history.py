@@ -26,7 +26,8 @@ color_val_loss = '#ffbb78'   # Light orange
 
 # 1. Accuracy Plot
 ax1.plot(df['epoch'] + 1, df['accuracy'], label='Train Accuracy', color=color_train_acc, marker='o', linewidth=2)
-ax1.plot(df['epoch'] + 1, df['val_accuracy'], label='Val Accuracy', color=color_val_acc, marker='s', linestyle='--', linewidth=2)
+if 'val_accuracy' in df.columns and not df['val_accuracy'].isna().all():
+    ax1.plot(df['epoch'] + 1, df['val_accuracy'], label='Val Accuracy', color=color_val_acc, marker='s', linestyle='--', linewidth=2)
 ax1.set_title('Model Classification Accuracy', fontsize=14, fontweight='bold', pad=15)
 ax1.set_xlabel('Epoch', fontsize=11)
 ax1.set_ylabel('Accuracy (Ratio)', fontsize=11)
@@ -37,7 +38,8 @@ ax1.grid(True, linestyle=':', alpha=0.6)
 
 # 2. Loss Plot
 ax2.plot(df['epoch'] + 1, df['loss'], label='Train Loss', color=color_train_loss, marker='o', linewidth=2)
-ax2.plot(df['epoch'] + 1, df['val_loss'], label='Val Loss', color=color_val_loss, marker='s', linestyle='--', linewidth=2)
+if 'val_loss' in df.columns and not df['val_loss'].isna().all():
+    ax2.plot(df['epoch'] + 1, df['val_loss'], label='Val Loss', color=color_val_loss, marker='s', linestyle='--', linewidth=2)
 ax2.set_title('Sparse Categorical Cross-Entropy Loss', fontsize=14, fontweight='bold', pad=15)
 ax2.set_xlabel('Epoch', fontsize=11)
 ax2.set_ylabel('Loss Value', fontsize=11)

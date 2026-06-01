@@ -12,9 +12,7 @@ import subprocess
 import pandas as pd
 from app.config import DATA_DIR, CLASS_NAMES
 from app.utils import download_dataset_if_missing
-from app.styles import inject_custom_css
-
-st.set_page_config(page_title="Train Model - Garbage Classifier", page_icon="⚙️", layout="wide")
+from app.styles import inject_custom_css, get_svg_icon
 
 # Apply premium visual design elements
 inject_custom_css()
@@ -31,15 +29,23 @@ def get_dataset_counts():
     return counts
 
 def main():
-    st.markdown("""
+    st.markdown(f"""
     <div class="header-banner" style="background: linear-gradient(135deg, #2E7D32 0%, #1B5E20 50%, #0d5c14 100%);">
-        <h1>⚙️ Train AI Model</h1>
+        <div style="display: flex; justify-content: center; align-items: center; gap: 16px; margin-bottom: 0.8rem;">
+            {get_svg_icon("settings", size=48, color="#FFFFFF")}
+            <h1 style="margin: 0 !important; color: white !important;">Train AI Model</h1>
+        </div>
         <p>Configure training hyperparameters, review your local training dataset distribution, and train your custom Deep Learning classifier.</p>
     </div>
     """, unsafe_allow_html=True)
     
     # Dataset summary section
-    st.write("### 📊 Dataset Distribution")
+    st.markdown(f"""
+    <div class="flex-header">
+        {get_svg_icon("chart", size=28, color="#2E7D32")}
+        <h3 style="color: #1B5E20; font-weight: 600;">Dataset Distribution</h3>
+    </div>
+    """, unsafe_allow_html=True)
     counts = get_dataset_counts()
     total_images = sum(counts.values())
     
@@ -78,14 +84,22 @@ def main():
     st.divider()
     
     # Training wizard step-by-step
-    st.write("### 🚀 Training Setup Wizard")
+    st.markdown(f"""
+    <div class="flex-header">
+        {get_svg_icon("settings", size=28, color="#2E7D32")}
+        <h3 style="color: #1B5E20; font-weight: 600;">Training Setup Wizard</h3>
+    </div>
+    """, unsafe_allow_html=True)
     col1, col2 = st.columns([1, 1])
     
     with col1:
-        st.markdown("""
+        st.markdown(f"""
         <div class="premium-card" style="height: 100%;">
-            <h4 style="color: #2E7D32; margin-top: 0;">Step 1: Hyperparameters</h4>
-            <p style="font-size: 0.9rem; color: #666;">Configure training complexity and optimization cycles.</p>
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 0.5rem;">
+                {get_svg_icon("cpu", size=20, color="#2E7D32")}
+                <h4 style="color: #2E7D32; margin: 0;">Step 1: Hyperparameters</h4>
+            </div>
+            <p style="font-size: 0.9rem; color: #666; margin-bottom: 1rem;">Configure training complexity and optimization cycles.</p>
         """, unsafe_allow_html=True)
         
         epochs = st.number_input("Number of Epochs", min_value=1, max_value=100, value=10, 
@@ -94,10 +108,13 @@ def main():
         st.markdown("</div>", unsafe_allow_html=True)
             
     with col2:
-        st.markdown("""
+        st.markdown(f"""
         <div class="premium-card" style="height: 100%;">
-            <h4 style="color: #2E7D32; margin-top: 0;">Step 2: Execution Settings</h4>
-            <p style="font-size: 0.9rem; color: #666;">Choose how training runs on your machine.</p>
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 0.5rem;">
+                {get_svg_icon("settings", size=20, color="#2E7D32")}
+                <h4 style="color: #2E7D32; margin: 0;">Step 2: Execution Settings</h4>
+            </div>
+            <p style="font-size: 0.9rem; color: #666; margin-bottom: 1rem;">Choose how training runs on your machine.</p>
         """, unsafe_allow_html=True)
         
         run_in_app = st.checkbox("Run synchronously inside app (blocks user actions)", value=False)
@@ -107,7 +124,7 @@ def main():
     st.write("")
     
     # Step 3: Run Training button
-    if st.button("🚀 Start Model Training", type="primary", use_container_width=True):
+    if st.button("Start Model Training", type="primary", use_container_width=True):
         if total_images == 0:
             st.warning("Your dataset is currently empty. Please run 'Sync / Verify Dataset' above first.")
             download_dataset_if_missing()
@@ -117,7 +134,7 @@ def main():
             from app.model import train_model_pipeline
             try:
                 model, history = train_model_pipeline(DATA_DIR, epochs=epochs)
-                st.success("🎉 Model trained successfully and saved to models/garbage_model.keras!")
+                st.success("Model trained successfully and saved to models/garbage_model.keras!")
                 try:
                     ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
                     subprocess.run([sys.executable, os.path.join(ROOT, 'scripts', 'plot_history.py')], check=True)
@@ -129,16 +146,24 @@ def main():
             ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
             logs_dir = os.path.join(ROOT, 'logs')
             os.makedirs(logs_dir, exist_ok=True)
+            log_file_path = os.path.join(logs_dir, 'training.log')
+            # Open in write mode to clear previous logs when a new training runs
+            log_file = open(log_file_path, 'w', encoding='utf-8')
             cmd = [sys.executable, os.path.join(ROOT, 'scripts', 'train.py'), '--epochs', str(epochs)]
-            proc = subprocess.Popen(cmd, cwd=ROOT)
+            proc = subprocess.Popen(cmd, cwd=ROOT, stdout=log_file, stderr=subprocess.STDOUT)
             st.session_state['training_pid'] = proc.pid
-            st.success(f"🚀 Training process started in background. (Process PID: {proc.pid})")
+            st.success(f"Training process started in background. (Process PID: {proc.pid})")
 
     # Display background tasks and monitoring
     pid = st.session_state.get('training_pid')
     if pid:
         st.divider()
-        st.subheader("⚙️ Background Tasks Monitor")
+        st.markdown(f"""
+        <div class="flex-header">
+            {get_svg_icon("cpu", size=24, color="#2E7D32")}
+            <h4 style="color: #1B5E20; font-weight: 600; margin: 0;">Background Tasks Monitor</h4>
+        </div>
+        """, unsafe_allow_html=True)
         def is_running(pid):
             try:
                 import os
@@ -156,7 +181,7 @@ def main():
             with col_stat:
                 st.info(f"⏳ Training process (PID: {pid}) is active and executing epochs...")
             with col_act:
-                if st.button("🛑 Terminate Training", use_container_width=True, type="primary"):
+                if st.button("Terminate Training", use_container_width=True, type="primary"):
                     try:
                         if os.name == 'nt':
                             subprocess.check_call(["taskkill", "/PID", str(pid), "/F"])
@@ -172,14 +197,19 @@ def main():
             del st.session_state['training_pid']
 
     st.divider()
-    st.write("### 💻 Training Logs Output Console")
+    st.markdown(f"""
+    <div class="flex-header">
+        {get_svg_icon("terminal", size=28, color="#2E7D32")}
+        <h3 style="color: #1B5E20; font-weight: 600;">Training Logs Output Console</h3>
+    </div>
+    """, unsafe_allow_html=True)
     
     # Styled logs refreshing console
     col_log_header, col_log_refresh = st.columns([4, 1])
     with col_log_header:
         st.write("Active log stream from `logs/training.log`:")
     with col_log_refresh:
-        btn_refresh = st.button("🔄 Refresh Logs Stream", use_container_width=True)
+        btn_refresh = st.button("Refresh Logs Stream", use_container_width=True)
 
     log_path = os.path.join(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')), 'logs', 'training.log')
     if os.path.exists(log_path):
@@ -205,7 +235,12 @@ def main():
     plot_path = os.path.join(ROOT, 'logs', 'training_plot.png')
     if os.path.exists(plot_path):
         st.divider()
-        st.markdown("### 📈 Training Results & Performance Curves")
+        st.markdown(f"""
+        <div class="flex-header">
+            {get_svg_icon("chart", size=28, color="#2E7D32")}
+            <h3 style="color: #1B5E20; font-weight: 600;">Training Results & Performance Curves</h3>
+        </div>
+        """, unsafe_allow_html=True)
         st.image(plot_path, use_column_width=True, caption="Training metrics showing accuracy and loss progression.")
 
 if __name__ == "__main__":

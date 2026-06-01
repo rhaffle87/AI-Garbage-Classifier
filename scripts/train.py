@@ -19,7 +19,8 @@ def main():
     parser.add_argument('--dry-run', action='store_true', help='Only validate dataset and print counts')
     args = parser.parse_args()
 
-    download_dataset_if_missing()
+    if not args.dry_run:
+        download_dataset_if_missing()
 
     if args.dry_run:
         print(f"Dry run: found {len(CLASS_NAMES)} classes.")
