@@ -158,3 +158,77 @@ def preprocess_image(image, target_size=None):
             return img
 
     raise ValueError('Unsupported image format for preprocessing')
+
+
+def write_tfrecords(dataset_path, output_tfrecord_path):
+    """Converts a directory-structured image dataset into a serialized TFRecord file.
+
+    Args:
+        dataset_path (str): Root folder containing class directories.
+        output_tfrecord_path (str): Target output file path.
+    """
+    import tensorflow as tf
+    
+    def _bytes_feature(value):
+        return tf.train.Feature(bytes_list=tf.train.BytesList(value=[value]))
+
+    def _int64_feature(value):
+        return tf.train.Feature(int64_list=tf.train.Int64List(value=[value]))
+
+    writer = tf.io.TFRecordWriter(output_tfrecord_path)
+    for label in CLASS_NAMES:
+        label_dir = os.path.join(dataset_path, label)
+        if not os.path.exists(label_dir):
+            continue
+        label_idx = CLASS_NAMES.index(label)
+        for filename in os.listdir(label_dir):
+            if filename.lower().endswith(('.png', '.jpg', '.jpeg')):
+                img_path = os.path.join(label_dir, filename)
+                try:
+                    with open(img_path, 'rb') as f:
+                        img_bytes = f.read()
+                    feature = {
+                        'image_raw': _bytes_feature(img_bytes),
+                        'label': _int64_feature(label_idx)
+                    }
+                    example = tf.train.Example(features=tf.train.Features(feature=feature))
+                    writer.write(example.SerializeToString())
+                except Exception as e:
+                    print(f"Warning: failed to serialize {img_path}: {e}")
+    writer.close()
+
+
+def load_tfrecord_dataset(tfrecord_path, batch_size=32, target_size=None):
+    """Loads and decodes a TFRecord dataset into a tf.data.Dataset ready for training.
+
+    Args:
+        tfrecord_path (str): Path to the TFRecord file.
+        batch_size (int): Batch size.
+        target_size (tuple, optional): Target (height, width) dimensions. Defaults to IMG_SIZE.
+
+    Returns:
+        tf.data.Dataset: Preprocessed and batched dataset.
+    """
+    import tensorflow as tf
+    if target_size is None:
+        target_size = IMG_SIZE
+
+    feature_description = {
+        'image_raw': tf.io.FixedLenFeature([], tf.string),
+        'label': tf.io.FixedLenFeature([], tf.int64)
+    }
+
+    def _parse_function(example_proto):
+        features = tf.io.parse_single_example(example_proto, feature_description)
+        image = tf.io.decode_jpeg(features['image_raw'], channels=3)
+        image = tf.image.resize(image, target_size)
+        image = tf.cast(image, tf.float32) / 255.0
+        label = features['label']
+        return image, label
+
+    dataset = tf.data.TFRecordDataset(tfrecord_path)
+    dataset = dataset.map(_parse_function, num_parallel_calls=tf.data.AUTOTUNE)
+    dataset = dataset.shuffle(buffer_size=1000)
+    dataset = dataset.batch(batch_size)
+    dataset = dataset.prefetch(buffer_size=tf.data.AUTOTUNE)
+    return dataset

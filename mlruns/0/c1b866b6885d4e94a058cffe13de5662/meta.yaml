@@ -1,0 +1,14 @@
+artifact_uri: file:///E:/Projects/AI%20Garbage%20Classifier/mlruns/0/c1b866b6885d4e94a058cffe13de5662/artifacts
+end_time: 1780311969419
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: c1b866b6885d4e94a058cffe13de5662
+run_name: popular-frog-229
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1780311963851
+status: 4
+tags: []
+user_id: Rafli Alif

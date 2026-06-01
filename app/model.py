@@ -74,44 +74,92 @@ def train_model_pipeline(dataset_dir, epochs=10, model_path=None):
     from tensorflow.keras import layers, models
 
     import os
-    total_images = sum([1 for r, d, files in os.walk(dataset_dir) for f in files if f.lower().endswith(('.png', '.jpg', '.jpeg'))])
-    val_split = 0.2 if total_images >= 30 else 0.0
+    if dataset_dir.endswith('.tfrecords'):
+        # -----------------------------------------------------------------
+        # High-Performance TFRecord Ingestion Pipeline
+        # -----------------------------------------------------------------
+        import logging
+        logging.info(f"Loading dataset from TFRecord path: {dataset_dir}")
+        full_dataset = tf.data.TFRecordDataset(dataset_dir)
+        
+        # Determine total size dynamically (fallback to 2527 if slow/fails)
+        try:
+            total_images = sum(1 for _ in full_dataset)
+        except Exception:
+            total_images = 2527
+            
+        val_split = 0.2 if total_images >= 30 else 0.0
+        val_size = int(total_images * val_split)
+        train_size = total_images - val_size
+        
+        feature_description = {
+            'image_raw': tf.io.FixedLenFeature([], tf.string),
+            'label': tf.io.FixedLenFeature([], tf.int64)
+        }
+        
+        def _parse_function(example_proto):
+            features = tf.io.parse_single_example(example_proto, feature_description)
+            image = tf.io.decode_jpeg(features['image_raw'], channels=3)
+            image = tf.image.resize(image, IMG_SIZE)
+            # Apply dynamic on-the-fly random horizontal flipping augmentations
+            image = tf.image.random_flip_left_right(image)
+            image = tf.cast(image, tf.float32) / 255.0
+            label = features['label']
+            return image, label
 
-    train_datagen = ImageDataGenerator(
-        rescale=1./255,
-        rotation_range=20,
-        width_shift_range=0.2,
-        height_shift_range=0.2,
-        shear_range=0.2,
-        zoom_range=0.2,
-        horizontal_flip=True,
-        validation_split=val_split
-    )
+        parsed_dataset = full_dataset.map(_parse_function, num_parallel_calls=tf.data.AUTOTUNE)
+        
+        train_generator = parsed_dataset.take(train_size).shuffle(buffer_size=1000).batch(32).prefetch(tf.data.AUTOTUNE)
+        if val_size > 0:
+            validation_generator = parsed_dataset.skip(train_size).batch(32).prefetch(tf.data.AUTOTUNE)
+        else:
+            validation_generator = None
+            
+        if train_size == 0:
+            logging.error('No training images found in TFRecord dataset.')
+            raise RuntimeError('No training images found in TFRecord dataset')
+    else:
+        # -----------------------------------------------------------------
+        # Standard Directory Ingestion Pipeline (Keras Generators)
+        # -----------------------------------------------------------------
+        total_images = sum([1 for r, d, files in os.walk(dataset_dir) for f in files if f.lower().endswith(('.png', '.jpg', '.jpeg'))])
+        val_split = 0.2 if total_images >= 30 else 0.0
 
-    train_generator = train_datagen.flow_from_directory(
-        dataset_dir,
-        target_size=IMG_SIZE,
-        batch_size=32,
-        class_mode='sparse',
-        subset='training',
-        shuffle=True
-    )
+        train_datagen = ImageDataGenerator(
+            rescale=1./255,
+            rotation_range=20,
+            width_shift_range=0.2,
+            height_shift_range=0.2,
+            shear_range=0.2,
+            zoom_range=0.2,
+            horizontal_flip=True,
+            validation_split=val_split
+        )
 
-    if val_split > 0:
-        validation_generator = train_datagen.flow_from_directory(
+        train_generator = train_datagen.flow_from_directory(
             dataset_dir,
             target_size=IMG_SIZE,
             batch_size=32,
             class_mode='sparse',
-            subset='validation'
+            subset='training',
+            shuffle=True
         )
-    else:
-        validation_generator = None
 
-    if train_generator.samples == 0:
-        import logging
-        logging.error('No training images found. Aborting training.')
-        raise RuntimeError('No training images found in dataset directory')
+        if val_split > 0:
+            validation_generator = train_datagen.flow_from_directory(
+                dataset_dir,
+                target_size=IMG_SIZE,
+                batch_size=32,
+                class_mode='sparse',
+                subset='validation'
+            )
+        else:
+            validation_generator = None
+
+        if train_generator.samples == 0:
+            import logging
+            logging.error('No training images found. Aborting training.')
+            raise RuntimeError('No training images found in dataset directory')
 
     base_model = MobileNetV2(
         input_shape=(IMG_SIZE[0], IMG_SIZE[1], 3),
@@ -132,7 +180,7 @@ def train_model_pipeline(dataset_dir, epochs=10, model_path=None):
                   loss='sparse_categorical_crossentropy',
                   metrics=['accuracy'])
 
-    from tensorflow.keras.callbacks import CSVLogger
+    from tensorflow.keras.callbacks import CSVLogger, EarlyStopping, ModelCheckpoint, ReduceLROnPlateau
     import logging
     from app.config import LOGS_DIR
     
@@ -145,11 +193,36 @@ def train_model_pipeline(dataset_dir, epochs=10, model_path=None):
             
     logging_callback = LoggingCallback()
 
+    checkpoint_path = model_path
+    early_stopping = EarlyStopping(monitor='val_loss', patience=3, restore_best_weights=True, verbose=1)
+    model_checkpoint = ModelCheckpoint(filepath=checkpoint_path, monitor='val_accuracy', save_best_only=True, verbose=1)
+    reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.5, patience=2, min_lr=1e-6, verbose=1)
+    
+    callbacks_list = [csv_logger, logging_callback, early_stopping, model_checkpoint, reduce_lr]
+
+    # Optional Tracking & Governance hooks
+    try:
+        import wandb
+        from wandb.integration.keras import WandbCallback
+        if wandb.run is not None:
+            callbacks_list.append(WandbCallback(save_model=False))
+            logging.info("Weights & Biases callback attached.")
+    except ImportError:
+        pass
+
+    try:
+        import mlflow
+        import mlflow.keras
+        mlflow.keras.autolog()
+        logging.info("MLflow autologging enabled.")
+    except ImportError:
+        pass
+
     history = model.fit(
         train_generator,
         validation_data=validation_generator,
         epochs=epochs,
-        callbacks=[csv_logger, logging_callback]
+        callbacks=callbacks_list
     )
 
     # =====================================================================
@@ -175,8 +248,16 @@ def train_model_pipeline(dataset_dir, epochs=10, model_path=None):
         train_generator,
         validation_data=validation_generator,
         epochs=fine_tune_epochs,
-        callbacks=[csv_logger, logging_callback]
+        callbacks=callbacks_list
     )
+
+    # Restore best checkpointed model weights if saved
+    if os.path.exists(checkpoint_path):
+        try:
+            model = tf.keras.models.load_model(checkpoint_path)
+            logging.info("Loaded best model weights from checkpoint.")
+        except Exception as e:
+            logging.warning(f"Could not load best model checkpoint, using final weights: {e}")
 
     model.save(model_path)
     import logging
