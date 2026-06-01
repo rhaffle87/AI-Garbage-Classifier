@@ -1,0 +1,14 @@
+artifact_uri: file:///E:/Projects/AI%20Garbage%20Classifier/mlruns/0/dcd628bf052c4cd3a05af0298311380e/artifacts
+end_time: 1780312783564
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: dcd628bf052c4cd3a05af0298311380e
+run_name: grandiose-squid-350
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1780312578737
+status: 3
+tags: []
+user_id: Rafli Alif
