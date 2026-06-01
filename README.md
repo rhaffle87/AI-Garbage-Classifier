@@ -1,114 +1,92 @@
-# 🌿♻️🍱 Image Classifier: Plant / Waste / Food
+# AI Garbage Classifier
 
-A multi-domain image classification project powered by Convolutional Neural Networks (CNN) and TensorFlow/Keras. This app can classify images into one of three categories:
+This project implements an AI-based garbage classification system using deep learning techniques. The model is trained to classify different types of garbage into predefined categories, which include cardboard, glass, metal, paper, plastic, and trash. The application is built using Streamlit, providing an interactive web interface for users to train the model and make predictions.
 
-- 🌿 Plant (e.g., poisonous vs. non-poisonous)
-- ♻️ Waste (e.g., organic, recyclable, hazardous)
-- 🍱 Food (e.g., healthy vs. unhealthy)
+## Project Structure
 
-The model is deployed with a clean, interactive UI using **Streamlit**, making it accessible for both educational and practical uses.
+```
+ai-garbage-classifier-streamlit
+├── app
+│   ├── streamlit_app.py       # Main entry point for the Streamlit web application
+│   ├── pages
+│   │   ├── Home.py            # Home page of the app
+│   │   ├── Train.py           # Page for training the AI model
+│   │   └── Predict.py         # Page for making predictions
+│   ├── model.py               # Model architecture and loading mechanism
+│   └── utils.py               # Utility functions for image preprocessing and data handling
+├── notebooks
+│   └── train_model.ipynb      # Jupyter notebook for training the AI model
+├── data
+│   └── garbage_classification   # Directory containing subdirectories for different garbage classes
+├── models
+│   └── garbage_model.h5       # Saved model after training
+├── scripts
+│   ├── train.py               # Script for training the model from the command line
+│   └── evaluate.py            # Script for evaluating the trained model
+├── tests
+│   ├── test_model.py          # Unit tests for model functions
+│   └── test_app.py            # Tests for the Streamlit app
+├── requirements.txt           # List of dependencies required for the project
+├── .gitignore                 # Files and directories to be ignored by Git
+└── README.md                  # Documentation for the project
+```
 
----
+## Setup Instructions
 
-## 🚀 Features
-
-- 📸 Upload any image to get instant predictions
-- 🧠 Trained on CNN using TensorFlow/Keras
-- 🌐 Web-based interface built with Streamlit
-- 📊 Simple and extensible multi-class output
-- 🤝 Open-source and beginner-friendly code structure
-
----
-
-## 📁 Project Structure
-1. **Structure**
+1. **Clone the Repository**
    ```bash
-   image-classifier/
-   ├── data/ # Training/validation datasets (organized per class)
-   ├── models/ # Trained model files (saved in HDF5/TF format)
-   ├── notebooks/ # Jupyter Notebooks for EDA and model training
-   ├── streamlit_app/ # Streamlit app files
-   │ ├── app.py
-   │ └── utils.py
-   ├── requirements.txt
-   └── README.md
-   
----
+   git clone <repository-url>
+   cd ai-garbage-classifier-streamlit
+   ```
 
-## 🔧 Tech Stack
-
-- **Python 3.10+**
-- **TensorFlow / Keras** for image classification
-- **Streamlit** for building the web app
-- **Pandas & NumPy** for data handling
-- **Matplotlib / Seaborn** for visualizations
-
----
-
-## 🧪 Dataset
-
-The dataset should be organized into separate folders for each category under the `data/` directory, e.g.:
-
-1. **Structure on data**
-   ```bash
-   data/
-   ├── plant/
-   │ ├── poisonous/
-   │ └── non_poisonous/
-   ├── waste/
-   │ ├── organic/
-   │ ├── recyclable/
-   │ └── hazardous/
-   ├── food/
-   │ ├── healthy/
-   │ └── unhealthy/
-
-You can use or adapt publicly available datasets like:
-- [Kaggle Plant Seedlings](https://www.kaggle.com/c/plant-seedlings-classification)
-- [Garbage Classification](https://www.kaggle.com/datasets/mostafaabla/garbage-classification)
-- [Food-101](https://data.vision.ee.ethz.ch/cvl/datasets_extra/food-101/)
-
----
-
-## 🖥️ How to Run the App Locally
-
-1. **Clone this repository**
-   ```bash
-   [git clone https://github.com/yourusername/image-classifier.git](https://github.com/rhaffle87/AI-Garbage-Classifier.git)
-   cd image-classifier
-   
-2. **Install dependencies**
+2. **Install Dependencies**
+   Make sure you have Python installed, then install the required packages:
    ```bash
    pip install -r requirements.txt
-   
-3. **Clone this repository**
+   ```
+
+3. **Prepare the Dataset**
+   Place your garbage classification images in the `data/garbage_classification` directory, organized into subdirectories for each class.
+
+4. **Train the Model**
+   You can train the model using the Jupyter notebook or the command line script:
+   - Using Jupyter Notebook:
+     ```bash
+     jupyter notebook notebooks/train_model.ipynb
+     ```
+   - Using Command Line:
+     ```bash
+     python scripts/train.py
+     ```
+
+5. **Run the Streamlit App**
+   Start the Streamlit application:
    ```bash
-   python notebooks/train_model.py
+   streamlit run app/streamlit_app.py
+   ```
 
-4. **Clone this repository**
-   ```bash
-   streamlit run streamlit_app/app.py
+## Usage
 
-## 🔧 Output
-| Input Image                                | Prediction         |
-| ------------------------------------------ | ------------------ |
-| ![sample](https://via.placeholder.com/100) | `Recyclable Waste` |
-| ![sample](https://via.placeholder.com/100) | `Unhealthy Food`   |
-| ![sample](https://via.placeholder.com/100) | `Poisonous Plant`  |
+- Navigate to the home page to access different functionalities.
+- Use the training page to train the model with your dataset.
+- Use the prediction page to upload images and get predictions from the trained model. The prediction page also provides a "Use webcam" option so you can capture a photo with your laptop camera and get a live classification (note: webcam access works when Streamlit runs locally on your machine).
+- For continuous real-time streaming predictions, install `streamlit-webrtc` (`pip install streamlit-webrtc`) and enable the "Enable continuous live webcam stream" option on the Predict page.
+- You can start training from the Train page; it launches a background training process and writes logs to `logs/training.log` and history to `logs/training_history.csv`.
 
-## 🤝 Contributing
-We welcome contributions! Whether you're fixing bugs, improving performance, or adding new categories—your help is appreciated.
-1. Fork this repo
-2. Create your feature branch (git checkout -b feature/new-class)
-3. Commit your changes (git commit -am 'Add new classifier')
-4. Push to the branch (git push origin feature/new-class)
-5. Open a Pull Request
+## Demo model (quick start)
 
-## 📚 Related Repositories
-- 🔗 davidsandberg/facenet – image embeddings
-- 🔗 MLH-Fellowship/plant-disease-detector – plant disease detection
+If you want to try the app immediately without training, a small one-epoch demo model is included at `models/demo_garbage_model.h5` (created by `scripts/demo.py`). To use it as the app's default model, copy it over the default path:
 
-## ✨ Acknowledgements
-- TensorFlow/Keras Documentation
-- Streamlit Community
-- Open datasets from Kaggle and UCI
+```powershell
+Copy-Item -Path models\demo_garbage_model.h5 -Destination models\garbage_model.h5 -Force
+```
+
+After copying, restart the Streamlit app and try the `Predict` page or webcam capture to see example predictions.
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a pull request or open an issue for any suggestions or improvements.
+
+## License
+
+This project is licensed under the MIT License. See the LICENSE file for more details.
