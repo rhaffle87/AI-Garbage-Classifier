@@ -65,6 +65,18 @@ ai-garbage-classifier-streamlit
    streamlit run app/streamlit_app.py
    ```
 
+## Model Training Performance
+
+The model is built on top of a frozen **MobileNetV2** backbone using transfer learning, with a custom classification head trained on the full dataset of ~2,500 images across 6 classes (*cardboard, glass, metal, paper, plastic, trash*).
+
+### Training Results (5 Epochs)
+- **Final Training Accuracy**: `85.03%` (Loss: `0.3896`)
+- **Final Validation Accuracy**: `74.35%` (Loss: `0.7116`)
+
+Below are the learning curves generated directly from the training history log (`logs/training_history.csv`):
+
+![Model Training Curves](assets/training_plot.png)
+
 ## Usage
 
 - Navigate to the home page to access different functionalities.

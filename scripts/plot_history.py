@@ -49,6 +49,10 @@ ax2.grid(True, linestyle=':', alpha=0.6)
 plt.suptitle('AI Garbage Classifier Training Performance (Transfer Learning)', fontsize=16, fontweight='bold', y=1.02)
 plt.tight_layout()
 
-# Save plot
+# Save plot to logs (for UI caching) and assets (for README documentation)
+plot_path_assets = os.path.join(ROOT, 'assets', 'training_plot.png')
+os.makedirs(os.path.dirname(plot_path_assets), exist_ok=True)
+
 plt.savefig(plot_path, dpi=300, bbox_inches='tight')
-print(f"[SUCCESS] Plot generated and saved to {plot_path}")
+plt.savefig(plot_path_assets, dpi=300, bbox_inches='tight')
+print(f"[SUCCESS] Plot generated and saved to {plot_path} and {plot_path_assets}")
