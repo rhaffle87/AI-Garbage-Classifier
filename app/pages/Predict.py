@@ -18,8 +18,13 @@ from app.styles import inject_custom_css, get_svg_icon
 inject_custom_css()
 
 # Track active model path and modification time to auto-reload if the model changes
-from app.config import MODEL_PATH, LEGACY_MODEL_PATH
-active_path = MODEL_PATH if os.path.exists(MODEL_PATH) else LEGACY_MODEL_PATH
+from app.config import PROD_MODEL_PATH, MODEL_PATH, LEGACY_MODEL_PATH
+if os.path.exists(PROD_MODEL_PATH):
+    active_path = PROD_MODEL_PATH
+elif os.path.exists(MODEL_PATH):
+    active_path = MODEL_PATH
+else:
+    active_path = LEGACY_MODEL_PATH
 mtime = os.path.getmtime(active_path) if os.path.exists(active_path) else 0.0
 
 @st.cache_resource
@@ -29,6 +34,7 @@ def get_cached_model(path, last_modified):
 model = get_cached_model(active_path, mtime)
 if getattr(model, '_is_fallback', False):
     st.warning("No valid saved model found — using a small fallback model. For meaningful results, train and save a model first on the Train page.")
+
 
 # Page Header
 st.markdown(f"""

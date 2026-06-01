@@ -22,18 +22,24 @@ def load_model(model_path=None):
     Returns:
         tf.keras.Model: The compiled Keras model object.
     """
+    from app.config import PROD_MODEL_PATH, MODEL_PATH, LEGACY_MODEL_PATH
     if model_path is None:
-        model_path = MODEL_PATH
+        if os.path.exists(PROD_MODEL_PATH):
+            model_path = PROD_MODEL_PATH
+        elif os.path.exists(MODEL_PATH):
+            model_path = MODEL_PATH
+        else:
+            model_path = LEGACY_MODEL_PATH
+            
     try:
         if os.path.exists(model_path):
             m = keras_load_model(model_path)
-        elif os.path.exists(LEGACY_MODEL_PATH):
-            m = keras_load_model(LEGACY_MODEL_PATH)
         else:
             raise FileNotFoundError("Model file not found")
         m._is_fallback = False
         return m
     except Exception as e:
+
         import warnings
         warnings.warn(f"Could not load model: {e}. Using a fallback untrained model.")
         from tensorflow.keras import layers, models

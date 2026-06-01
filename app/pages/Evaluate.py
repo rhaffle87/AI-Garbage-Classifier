@@ -34,8 +34,13 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 # Track active model path and modification time to auto-reload if the model changes
-from app.config import MODEL_PATH, LEGACY_MODEL_PATH
-active_path = MODEL_PATH if os.path.exists(MODEL_PATH) else LEGACY_MODEL_PATH
+from app.config import PROD_MODEL_PATH, MODEL_PATH, LEGACY_MODEL_PATH
+if os.path.exists(PROD_MODEL_PATH):
+    active_path = PROD_MODEL_PATH
+elif os.path.exists(MODEL_PATH):
+    active_path = MODEL_PATH
+else:
+    active_path = LEGACY_MODEL_PATH
 mtime = os.path.getmtime(active_path) if os.path.exists(active_path) else 0.0
 
 @st.cache_resource
@@ -47,27 +52,111 @@ if getattr(model, '_is_fallback', False):
     st.warning("No valid saved model found — using a small fallback model. To see meaningful evaluation, please train a model first on the Train page.")
     st.stop()
 
+
+st.markdown(f"""
+<div class="flex-header">
+    {get_svg_icon("shield", size=28, color="#00796b")}
+    <h3 style="color: #004d40; font-weight: 600;">Currently Loaded Model Details</h3>
+</div>
+""", unsafe_allow_html=True)
+
+from datetime import datetime
+from app.styles import get_latest_pipeline_summary
+
+model_type = "UNKNOWN"
+status_color = "#333"
+status_bg = "#f3f4f6"
+status_border = "#e5e7eb"
+
+if active_path == PROD_MODEL_PATH:
+    model_type = "🛡️ PRODUCTION PROMOTED (Passed Quality Gate)"
+    status_color = "#2E7D32"
+    status_bg = "#E8F5E9"
+    status_border = "#C8E6C9"
+elif active_path == MODEL_PATH:
+    model_type = "⚠️ CHECKPOINT DRAFT (Latest Run)"
+    status_color = "#E65100"
+    status_bg = "#FFF3E0"
+    status_border = "#FFE0B2"
+elif active_path == LEGACY_MODEL_PATH:
+    model_type = "📁 LEGACY FALLBACK"
+    status_color = "#37474F"
+    status_bg = "#ECEFF1"
+    status_border = "#CFD8DC"
+
+mtime_str = datetime.fromtimestamp(mtime).strftime('%Y-%m-%d %H:%M:%S')
+
+st.markdown(f"""
+<div style="background-color: {status_bg}; border: 1px solid {status_border}; border-radius: 12px; padding: 16px; margin-bottom: 20px;">
+    <table style="width: 100%; border-collapse: collapse; font-size: 0.95rem;">
+        <tr style="border-bottom: 1px solid rgba(0,0,0,0.05); height: 35px;">
+            <td style="color: #666; font-weight: 500;">Active Model Source</td>
+            <td style="text-align: right; font-weight: 700; color: {status_color};">{model_type}</td>
+        </tr>
+        <tr style="border-bottom: 1px solid rgba(0,0,0,0.05); height: 35px;">
+            <td style="color: #666; font-weight: 500;">File Path</td>
+            <td style="text-align: right; font-weight: 600; color: #444; font-family: monospace;">{os.path.basename(active_path)}</td>
+        </tr>
+        <tr style="height: 35px;">
+            <td style="color: #666; font-weight: 500;">Last Modified Time</td>
+            <td style="text-align: right; font-weight: 600; color: #444;">{mtime_str}</td>
+        </tr>
+    </table>
+</div>
+""", unsafe_allow_html=True)
+
+# Latest pipeline summary details (if any)
+summary = get_latest_pipeline_summary()
+if summary:
+    st.markdown(f"""
+    <div class="flex-header">
+        {get_svg_icon("cpu", size=28, color="#00796b")}
+        <h3 style="color: #004d40; font-weight: 600;">Latest Pipeline Metrics</h3>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    accuracy_pct = summary["accuracy"]
+    f1_pct = summary["f1"]
+    
+    st.markdown(f"""
+    <div style="display: flex; gap: 15px; margin-bottom: 20px;">
+        <div style="flex: 1; background: #ffffff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 15px; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.02);">
+            <div style="font-size: 0.75rem; color: #9CA3AF; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;">Pipeline Accuracy</div>
+            <div style="font-size: 1.8rem; font-weight: 700; color: #004d40; margin-top: 4px;">{accuracy_pct}</div>
+        </div>
+        <div style="flex: 1; background: #ffffff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 15px; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.02);">
+            <div style="font-size: 0.75rem; color: #9CA3AF; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;">Pipeline Macro F1</div>
+            <div style="font-size: 1.8rem; font-weight: 700; color: #0288D1; margin-top: 4px;">{f1_pct}</div>
+        </div>
+        <div style="flex: 1; background: #ffffff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 15px; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.02);">
+            <div style="font-size: 0.75rem; color: #9CA3AF; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;">Training Duration</div>
+            <div style="font-size: 1.8rem; font-weight: 700; color: #ef6c00; margin-top: 4px;">{summary["duration"]}</div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
 st.markdown(f"""
 <div class="flex-header">
     {get_svg_icon("settings", size=28, color="#00796b")}
     <h3 style="color: #004d40; font-weight: 600;">Model Evaluation Control</h3>
 </div>
 """, unsafe_allow_html=True)
-st.markdown("Click the button below to load test images, run predictions, and compile standard classification metrics.")
+st.markdown("Click the button below to load test images, run predictions, and compile standard classification metrics on the selected model.")
 
-if st.button("Run Full Model Evaluation", type="primary", use_container_width=True):
+if st.button("Run Live Model Evaluation Sweep", type="primary", use_container_width=True):
     status = st.status("Evaluating model...", expanded=True)
     with status:
         st.write("Loading validation images and preprocessing...")
         try:
             from scripts.evaluate import evaluate_model
             st.write("Running predictions batch...")
-            report, cm = evaluate_model()
+            report, cm = evaluate_model(model_path=active_path)
             status.update(label="Evaluation Complete!", state="complete", expanded=False)
         except Exception as e:
             status.update(label="Evaluation Failed!", state="error")
             st.error(f"Error during evaluation: {e}")
             st.stop()
+
             
     st.success("Model metrics successfully compiled!")
     

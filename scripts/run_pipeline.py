@@ -82,8 +82,10 @@ def train_model(epochs, use_tfrecords, tfrecord_file):
 def evaluate_and_promote(min_accuracy_threshold=0.75):
     """Runs model evaluation sweep, promos checkpoint if accuracy meets quality gate."""
     print("--- [Stage 4/6] Running Model Evaluation Sweep ---")
+    checkpoint_path = os.path.join(MODELS_DIR, 'garbage_model.keras')
     try:
-        report, cm = evaluate_model()
+        report, cm = evaluate_model(model_path=checkpoint_path)
+
         acc = report.get('accuracy', 0.0)
         macro_f1 = report.get('macro avg', {}).get('f1-score', 0.0)
         

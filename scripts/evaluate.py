@@ -12,16 +12,18 @@ from app.model import load_model
 from app.utils import load_data
 from app.config import CLASS_NAMES, DATA_DIR, IMG_SIZE
 
-def evaluate_model(test_data_path=DATA_DIR):
+def evaluate_model(test_data_path=DATA_DIR, model_path=None):
     """Loads a trained model and evaluates it on the test dataset.
 
     Args:
         test_data_path (str): Path to the evaluation dataset folder.
+        model_path (str, optional): Custom model file path to load.
 
     Returns:
         tuple: (classification_report_dict, confusion_matrix_ndarray)
     """
-    model = load_model()
+    model = load_model(model_path)
+
     
     # Determine the model's expected input dimensions dynamically
     try:

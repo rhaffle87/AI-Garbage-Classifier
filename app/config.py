@@ -29,4 +29,6 @@ NUM_CLASSES = len(CLASS_NAMES)
 
 # Model Storage File Paths
 MODEL_PATH = os.path.join(MODELS_DIR, 'garbage_model.keras')  # Preferred TF format
+PROD_MODEL_PATH = os.path.join(MODELS_DIR, 'garbage_model_prod.keras')  # Promoted production model
 LEGACY_MODEL_PATH = os.path.join(MODELS_DIR, 'garbage_model.h5')  # Legacy format fallback
+

@@ -332,3 +332,92 @@ def inject_custom_css():
     </style>
     """
     st.markdown(css, unsafe_allow_html=True)
+
+def render_sidebar_model_status():
+    """Renders active model validation & promotion status inside the Streamlit sidebar."""
+    import os
+    from datetime import datetime
+    from app.config import PROD_MODEL_PATH, MODEL_PATH, LEGACY_MODEL_PATH
+    
+    st.sidebar.markdown("---")
+    st.sidebar.markdown(f"""
+    <div style="padding: 10px 0 5px 0;">
+        <h4 style="margin: 0; color: #1B5E20; display: flex; align-items: center; gap: 8px; font-size: 1.05rem;">
+            {get_svg_icon("shield", size=18, color="#1B5E20")}
+            <span>Model Status</span>
+        </h4>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    if os.path.exists(PROD_MODEL_PATH):
+        mtime = os.path.getmtime(PROD_MODEL_PATH)
+        dt = datetime.fromtimestamp(mtime).strftime('%Y-%m-%d %H:%M')
+        st.sidebar.markdown(f"""
+        <div style="background-color: #E8F5E9; border: 1px solid #C8E6C9; border-radius: 12px; padding: 12px; margin-bottom: 10px; box-shadow: 0 2px 8px rgba(46,125,50,0.05);">
+            <div style="color: #2E7D32; font-weight: 700; font-size: 0.8rem; letter-spacing: 0.5px;">🛡️ PRODUCTION PROMOTED</div>
+            <div style="color: #4b5563; font-size: 0.75rem; margin-top: 4px; line-height: 1.4;">Active model met the 75% accuracy quality gate constraint.</div>
+            <div style="color: #9ca3af; font-size: 0.7rem; margin-top: 8px; font-weight: 500;">Last Promoted: {dt}</div>
+        </div>
+        """, unsafe_allow_html=True)
+    elif os.path.exists(MODEL_PATH):
+        mtime = os.path.getmtime(MODEL_PATH)
+        dt = datetime.fromtimestamp(mtime).strftime('%Y-%m-%d %H:%M')
+        st.sidebar.markdown(f"""
+        <div style="background-color: #FFF3E0; border: 1px solid #FFE0B2; border-radius: 12px; padding: 12px; margin-bottom: 10px; box-shadow: 0 2px 8px rgba(230,81,0,0.05);">
+            <div style="color: #E65100; font-weight: 700; font-size: 0.8rem; letter-spacing: 0.5px;">⚠️ CHECKPOINT DRAFT</div>
+            <div style="color: #4b5563; font-size: 0.75rem; margin-top: 4px; line-height: 1.4;">Latest training checkpoint. Quality gate not yet passed/evaluated.</div>
+            <div style="color: #9ca3af; font-size: 0.7rem; margin-top: 8px; font-weight: 500;">Saved: {dt}</div>
+        </div>
+        """, unsafe_allow_html=True)
+    elif os.path.exists(LEGACY_MODEL_PATH):
+        mtime = os.path.getmtime(LEGACY_MODEL_PATH)
+        dt = datetime.fromtimestamp(mtime).strftime('%Y-%m-%d %H:%M')
+        st.sidebar.markdown(f"""
+        <div style="background-color: #ECEFF1; border: 1px solid #CFD8DC; border-radius: 12px; padding: 12px; margin-bottom: 10px;">
+            <div style="color: #37474F; font-weight: 700; font-size: 0.8rem; letter-spacing: 0.5px;">📁 LEGACY FALLBACK</div>
+            <div style="color: #4b5563; font-size: 0.75rem; margin-top: 4px; line-height: 1.4;">Using legacy model binary.</div>
+            <div style="color: #9ca3af; font-size: 0.7rem; margin-top: 8px; font-weight: 500;">Saved: {dt}</div>
+        </div>
+        """, unsafe_allow_html=True)
+    else:
+        st.sidebar.markdown("""
+        <div style="background-color: #FFEBEE; border: 1px solid #FFCDD2; border-radius: 12px; padding: 12px; margin-bottom: 10px;">
+            <div style="color: #C62828; font-weight: 700; font-size: 0.8rem; letter-spacing: 0.5px;">❌ NO TRAINED MODEL</div>
+            <div style="color: #4b5563; font-size: 0.75rem; margin-top: 4px; line-height: 1.4;">Active inference is falling back to untrained dummy classifier.</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+def get_latest_pipeline_summary():
+    """Parses and returns the latest MLOps pipeline summary log as a dictionary."""
+    import os
+    import re
+    from app.config import LOGS_DIR
+    
+    summary_path = os.path.join(LOGS_DIR, 'pipeline_run_summary.md')
+    if not os.path.exists(summary_path):
+        return None
+        
+    try:
+        with open(summary_path, 'r', encoding='utf-8') as f:
+            content = f.read()
+            
+        date_match = re.search(r"Generated on: (.*)", content)
+        duration_match = re.search(r"Duration: (.*) seconds", content)
+        epochs_match = re.search(r"- Epochs: (.*)", content)
+        format_match = re.search(r"- Streaming Format: (.*)", content)
+        accuracy_match = re.search(r"- \*\*Test Accuracy\*\*: (.*)%", content)
+        f1_match = re.search(r"- \*\*Macro F1-Score\*\*: (.*)%", content)
+        promoted_match = re.search(r"- \*\*Promoted to Production\*\*: (.*)", content)
+        
+        return {
+            "date": date_match.group(1).strip() if date_match else "N/A",
+            "duration": duration_match.group(1).strip() if duration_match else "N/A",
+            "epochs": epochs_match.group(1).strip() if epochs_match else "N/A",
+            "format": format_match.group(1).strip() if format_match else "N/A",
+            "accuracy": accuracy_match.group(1).strip() if accuracy_match else "N/A",
+            "f1": f1_match.group(1).strip() if f1_match else "N/A",
+            "promoted": "Yes" if (promoted_match and "YES" in promoted_match.group(1)) else "No"
+        }
+    except Exception:
+        return None
+

@@ -1,0 +1,10 @@
+digest: 9288a964
+name: dataset
+profile: '{"features_cardinality": -2}'
+schema: '{"mlflow_tensorspec": {"features": "[{\"name\": \"0\", \"type\": \"tensor\",
+  \"tensor-spec\": {\"dtype\": \"float32\", \"shape\": [-1, 224, 224, 3]}}, {\"name\":
+  \"1\", \"type\": \"tensor\", \"tensor-spec\": {\"dtype\": \"int64\", \"shape\":
+  [-1]}}]", "targets": null}}'
+source: '{"tags": {"mlflow.user": "Rafli Alif", "mlflow.source.name": "scripts/run_pipeline.py",
+  "mlflow.source.type": "LOCAL", "mlflow.source.git.commit": "ffd70c3cbfa303580951a401e5216e34e7fe09e9"}}'
+source_type: code

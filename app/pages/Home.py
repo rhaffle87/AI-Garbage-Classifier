@@ -13,7 +13,10 @@ if ROOT not in sys.path:
     sys.path.insert(0, ROOT)
 
 import streamlit as st
-from app.styles import get_svg_icon
+from app.styles import get_svg_icon, inject_custom_css, get_latest_pipeline_summary
+
+# Apply global premium styling
+inject_custom_css()
 
 # Hero Section
 st.markdown(f"""
@@ -25,6 +28,7 @@ st.markdown(f"""
     <p>A smart, modern way to identify and sort your waste using deep learning and neural network image classification.</p>
 </div>
 """, unsafe_allow_html=True)
+
 
 # Core Features Grid (using premium cards)
 st.markdown(f"""
@@ -74,6 +78,75 @@ with col3:
         </p>
     </div>
     """, unsafe_allow_html=True)
+
+# MLOps Pipeline Status Section
+summary = get_latest_pipeline_summary()
+if summary:
+    st.divider()
+    st.markdown(f"""
+    <div class="flex-header">
+        {get_svg_icon("cpu", size=28, color="#2E7D32")}
+        <h3 style="color: #1B5E20; font-weight: 600;">Latest MLOps Pipeline Status</h3>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    status_color = "#2E7D32" if summary["promoted"] == "Yes" else "#C62828"
+    status_bg = "#E8F5E9" if summary["promoted"] == "Yes" else "#FFEBEE"
+    status_border = "#C8E6C9" if summary["promoted"] == "Yes" else "#FFCDD2"
+    status_text = "🛡️ PASSED & PROMOTED TO PRODUCTION" if summary["promoted"] == "Yes" else "❌ REJECTED BY QUALITY GATE (Draft Checkpoint)"
+    
+    col_p1, col_p2 = st.columns([1, 1])
+    with col_p1:
+        st.markdown(f"""
+        <div class="premium-card" style="height: 100%;">
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 0.8rem;">
+                {get_svg_icon("settings", size=20, color="#1B5E20")}
+                <h4 style="color: #1B5E20; margin: 0; font-size: 1.05rem;">Pipeline Settings & Run Info</h4>
+            </div>
+            <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
+                <tr style="border-bottom: 1px solid #eee; height: 35px;">
+                    <td style="color: #666; font-weight: 500;">Run Date</td>
+                    <td style="text-align: right; font-weight: 600; color: #333;">{summary["date"]}</td>
+                </tr>
+                <tr style="border-bottom: 1px solid #eee; height: 35px;">
+                    <td style="color: #666; font-weight: 500;">Training Duration</td>
+                    <td style="text-align: right; font-weight: 600; color: #333;">{summary["duration"]}</td>
+                </tr>
+                <tr style="border-bottom: 1px solid #eee; height: 35px;">
+                    <td style="color: #666; font-weight: 500;">Training Epochs</td>
+                    <td style="text-align: right; font-weight: 600; color: #333;">{summary["epochs"]} epochs</td>
+                </tr>
+                <tr style="height: 35px;">
+                    <td style="color: #666; font-weight: 500;">Data Ingestion Format</td>
+                    <td style="text-align: right; font-weight: 600; color: #333;">{summary["format"]}</td>
+                </tr>
+            </table>
+        </div>
+        """, unsafe_allow_html=True)
+        
+    with col_p2:
+        st.markdown(f"""
+        <div class="premium-card" style="height: 100%;">
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 0.8rem;">
+                {get_svg_icon("chart", size=20, color="#1B5E20")}
+                <h4 style="color: #1B5E20; margin: 0; font-size: 1.05rem;">Validation Accuracy & Promotion</h4>
+            </div>
+            <div style="display: flex; gap: 15px; margin-bottom: 12px;">
+                <div style="flex: 1; background-color: #F9FAFB; border: 1px solid #F3F4F6; border-radius: 8px; padding: 10px; text-align: center;">
+                    <div style="font-size: 0.7rem; color: #9CA3AF; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;">Test Accuracy</div>
+                    <div style="font-size: 1.5rem; font-weight: 700; color: #1B5E20; margin-top: 2px;">{summary["accuracy"]}</div>
+                </div>
+                <div style="flex: 1; background-color: #F9FAFB; border: 1px solid #F3F4F6; border-radius: 8px; padding: 10px; text-align: center;">
+                    <div style="font-size: 0.7rem; color: #9CA3AF; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;">Macro F1-Score</div>
+                    <div style="font-size: 1.5rem; font-weight: 700; color: #0288D1; margin-top: 2px;">{summary["f1"]}</div>
+                </div>
+            </div>
+            <div style="background-color: {status_bg}; border: 1px solid {status_border}; border-radius: 8px; padding: 10px; text-align: center;">
+                <div style="font-size: 0.65rem; color: #6B7280; text-transform: uppercase; font-weight: 700; margin-bottom: 2px; letter-spacing: 0.5px;">Promotion Verdict</div>
+                <div style="color: {status_color}; font-weight: 700; font-size: 0.8rem; letter-spacing: 0.2px;">{status_text}</div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
 
 # Interactive Section: Recycling Impact Calculator
 st.divider()
