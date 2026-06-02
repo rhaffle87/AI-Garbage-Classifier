@@ -24,7 +24,7 @@ inject_custom_css()
 
 # Header Banner
 st.markdown(f"""
-<div class="header-banner" style="background: linear-gradient(135deg, #004d40 0%, #00695c 50%, #00796b 100%);">
+<div class="header-banner">
     <div style="display: flex; justify-content: center; align-items: center; gap: 16px; margin-bottom: 0.8rem;">
         {get_svg_icon("chart", size=48, color="#FFFFFF")}
         <h1 style="margin: 0 !important; color: white !important;">Evaluate Model Performance</h1>
@@ -55,8 +55,8 @@ if getattr(model, '_is_fallback', False):
 
 st.markdown(f"""
 <div class="flex-header">
-    {get_svg_icon("shield", size=28, color="#00796b")}
-    <h3 style="color: #004d40; font-weight: 600;">Currently Loaded Model Details</h3>
+    {get_svg_icon("shield", size=28, color="var(--theme-primary)")}
+    <h3 style="color: var(--theme-green-dark); font-weight: 600;">Currently Loaded Model Details</h3>
 </div>
 """, unsafe_allow_html=True)
 
@@ -64,42 +64,42 @@ from datetime import datetime
 from app.styles import get_latest_pipeline_summary
 
 model_type = "UNKNOWN"
-status_color = "#333"
-status_bg = "#f3f4f6"
-status_border = "#e5e7eb"
+status_color = "var(--text-color)"
+status_bg = "color-mix(in srgb, var(--text-color) 8%, var(--background-color))"
+status_border = "color-mix(in srgb, var(--text-color) 15%, transparent)"
 
 if active_path == PROD_MODEL_PATH:
     model_type = "🛡️ PRODUCTION PROMOTED (Passed Quality Gate)"
-    status_color = "#2E7D32"
-    status_bg = "#E8F5E9"
-    status_border = "#C8E6C9"
+    status_color = "color-mix(in srgb, #2E7D32 85%, var(--text-color))"
+    status_bg = "color-mix(in srgb, #2E7D32 12%, var(--background-color))"
+    status_border = "color-mix(in srgb, #2E7D32 25%, transparent)"
 elif active_path == MODEL_PATH:
     model_type = "⚠️ CHECKPOINT DRAFT (Latest Run)"
-    status_color = "#E65100"
-    status_bg = "#FFF3E0"
-    status_border = "#FFE0B2"
+    status_color = "color-mix(in srgb, #E65100 85%, var(--text-color))"
+    status_bg = "color-mix(in srgb, #E65100 12%, var(--background-color))"
+    status_border = "color-mix(in srgb, #E65100 25%, transparent)"
 elif active_path == LEGACY_MODEL_PATH:
     model_type = "📁 LEGACY FALLBACK"
-    status_color = "#37474F"
-    status_bg = "#ECEFF1"
-    status_border = "#CFD8DC"
+    status_color = "color-mix(in srgb, var(--text-color) 75%, transparent)"
+    status_bg = "color-mix(in srgb, var(--text-color) 8%, var(--background-color))"
+    status_border = "color-mix(in srgb, var(--text-color) 15%, transparent)"
 
 mtime_str = datetime.fromtimestamp(mtime).strftime('%Y-%m-%d %H:%M:%S')
 
 st.markdown(f"""
-<div style="background-color: {status_bg}; border: 1px solid {status_border}; border-radius: 12px; padding: 16px; margin-bottom: 20px;">
+<div style="background-color: {status_bg}; border: 1px solid {status_border}; border-radius: 12px; padding: 16px; margin-bottom: 20px; box-shadow: var(--theme-card-shadow);">
     <table style="width: 100%; border-collapse: collapse; font-size: 0.95rem;">
-        <tr style="border-bottom: 1px solid rgba(0,0,0,0.05); height: 35px;">
-            <td style="color: #666; font-weight: 500;">Active Model Source</td>
+        <tr style="border-bottom: 1px solid color-mix(in srgb, var(--text-color) 10%, transparent); height: 35px;">
+            <td style="color: var(--theme-text-muted); font-weight: 500;">Active Model Source</td>
             <td style="text-align: right; font-weight: 700; color: {status_color};">{model_type}</td>
         </tr>
-        <tr style="border-bottom: 1px solid rgba(0,0,0,0.05); height: 35px;">
-            <td style="color: #666; font-weight: 500;">File Path</td>
-            <td style="text-align: right; font-weight: 600; color: #444; font-family: monospace;">{os.path.basename(active_path)}</td>
+        <tr style="border-bottom: 1px solid color-mix(in srgb, var(--text-color) 10%, transparent); height: 35px;">
+            <td style="color: var(--theme-text-muted); font-weight: 500;">File Path</td>
+            <td style="text-align: right; font-weight: 600; color: var(--text-color); font-family: monospace;">{os.path.basename(active_path)}</td>
         </tr>
         <tr style="height: 35px;">
-            <td style="color: #666; font-weight: 500;">Last Modified Time</td>
-            <td style="text-align: right; font-weight: 600; color: #444;">{mtime_str}</td>
+            <td style="color: var(--theme-text-muted); font-weight: 500;">Last Modified Time</td>
+            <td style="text-align: right; font-weight: 600; color: var(--text-color);">{mtime_str}</td>
         </tr>
     </table>
 </div>
@@ -110,8 +110,8 @@ summary = get_latest_pipeline_summary()
 if summary:
     st.markdown(f"""
     <div class="flex-header">
-        {get_svg_icon("cpu", size=28, color="#00796b")}
-        <h3 style="color: #004d40; font-weight: 600;">Latest Pipeline Metrics</h3>
+        {get_svg_icon("cpu", size=28, color="var(--theme-primary)")}
+        <h3 style="color: var(--theme-green-dark); font-weight: 600;">Latest Pipeline Metrics</h3>
     </div>
     """, unsafe_allow_html=True)
     
@@ -120,25 +120,25 @@ if summary:
     
     st.markdown(f"""
     <div style="display: flex; gap: 15px; margin-bottom: 20px;">
-        <div style="flex: 1; background: #ffffff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 15px; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.02);">
-            <div style="font-size: 0.75rem; color: #9CA3AF; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;">Pipeline Accuracy</div>
-            <div style="font-size: 1.8rem; font-weight: 700; color: #004d40; margin-top: 4px;">{accuracy_pct}</div>
+        <div style="flex: 1; background: var(--theme-card-bg); border: 1px solid var(--theme-card-border); border-radius: 12px; padding: 15px; text-align: center; box-shadow: var(--theme-card-shadow);">
+            <div style="font-size: 0.75rem; color: var(--theme-text-muted); text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;">Pipeline Accuracy</div>
+            <div style="font-size: 1.8rem; font-weight: 700; color: var(--theme-green-dark); margin-top: 4px;">{accuracy_pct}</div>
         </div>
-        <div style="flex: 1; background: #ffffff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 15px; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.02);">
-            <div style="font-size: 0.75rem; color: #9CA3AF; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;">Pipeline Macro F1</div>
-            <div style="font-size: 1.8rem; font-weight: 700; color: #0288D1; margin-top: 4px;">{f1_pct}</div>
+        <div style="flex: 1; background: var(--theme-card-bg); border: 1px solid var(--theme-card-border); border-radius: 12px; padding: 15px; text-align: center; box-shadow: var(--theme-card-shadow);">
+            <div style="font-size: 0.75rem; color: var(--theme-text-muted); text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;">Pipeline Macro F1</div>
+            <div style="font-size: 1.8rem; font-weight: 700; color: color-mix(in srgb, #0288D1 85%, var(--text-color)); margin-top: 4px;">{f1_pct}</div>
         </div>
-        <div style="flex: 1; background: #ffffff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 15px; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.02);">
-            <div style="font-size: 0.75rem; color: #9CA3AF; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;">Training Duration</div>
-            <div style="font-size: 1.8rem; font-weight: 700; color: #ef6c00; margin-top: 4px;">{summary["duration"]}</div>
+        <div style="flex: 1; background: var(--theme-card-bg); border: 1px solid var(--theme-card-border); border-radius: 12px; padding: 15px; text-align: center; box-shadow: var(--theme-card-shadow);">
+            <div style="font-size: 0.75rem; color: var(--theme-text-muted); text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;">Training Duration</div>
+            <div style="font-size: 1.8rem; font-weight: 700; color: color-mix(in srgb, #ef6c00 85%, var(--text-color)); margin-top: 4px;">{summary["duration"]}</div>
         </div>
     </div>
     """, unsafe_allow_html=True)
 
 st.markdown(f"""
 <div class="flex-header">
-    {get_svg_icon("settings", size=28, color="#00796b")}
-    <h3 style="color: #004d40; font-weight: 600;">Model Evaluation Control</h3>
+    {get_svg_icon("settings", size=28, color="var(--theme-primary)")}
+    <h3 style="color: var(--theme-green-dark); font-weight: 600;">Model Evaluation Control</h3>
 </div>
 """, unsafe_allow_html=True)
 st.markdown("Click the button below to load test images, run predictions, and compile standard classification metrics on the selected model.")
@@ -162,8 +162,8 @@ if st.button("Run Live Model Evaluation Sweep", type="primary", use_container_wi
     
     st.markdown(f"""
     <div class="flex-header">
-        {get_svg_icon("chart", size=28, color="#00796b")}
-        <h3 style="color: #004d40; font-weight: 600;">Key Metrics Summary</h3>
+        {get_svg_icon("chart", size=28, color="var(--theme-primary)")}
+        <h3 style="color: var(--theme-green-dark); font-weight: 600;">Key Metrics Summary</h3>
     </div>
     """, unsafe_allow_html=True)
     
@@ -182,34 +182,34 @@ if st.button("Run Live Model Evaluation Sweep", type="primary", use_container_wi
         <div class="metric-card">
             <div class="metric-label">Overall Accuracy</div>
             <div class="metric-value">{accuracy*100:.1f}%</div>
-            <div style="font-size: 0.8rem; color: #666;">Ratio of correct classifications</div>
+            <div style="font-size: 0.8rem; color: var(--theme-text-muted);">Ratio of correct classifications</div>
         </div>
         """, unsafe_allow_html=True)
         
     with m_col2:
         st.markdown(f"""
-        <div class="metric-card" style="border-top-color: #00796b;">
+        <div class="metric-card" style="border-top-color: var(--theme-primary) !important;">
             <div class="metric-label">Macro Precision</div>
             <div class="metric-value">{precision*100:.1f}%</div>
-            <div style="font-size: 0.8rem; color: #666;">Ability to avoid false positives</div>
+            <div style="font-size: 0.8rem; color: var(--theme-text-muted);">Ability to avoid false positives</div>
         </div>
         """, unsafe_allow_html=True)
         
     with m_col3:
         st.markdown(f"""
-        <div class="metric-card" style="border-top-color: #00796b;">
+        <div class="metric-card" style="border-top-color: var(--theme-primary) !important;">
             <div class="metric-label">Macro Recall</div>
             <div class="metric-value">{recall*100:.1f}%</div>
-            <div style="font-size: 0.8rem; color: #666;">Ability to find all positives</div>
+            <div style="font-size: 0.8rem; color: var(--theme-text-muted);">Ability to find all positives</div>
         </div>
         """, unsafe_allow_html=True)
  
     with m_col4:
         st.markdown(f"""
-        <div class="metric-card" style="border-top-color: #00796b;">
+        <div class="metric-card" style="border-top-color: var(--theme-primary) !important;">
             <div class="metric-label">Macro F1-Score</div>
             <div class="metric-value">{f1_score*100:.1f}%</div>
-            <div style="font-size: 0.8rem; color: #666;">Harmonic mean of precision and recall</div>
+            <div style="font-size: 0.8rem; color: var(--theme-text-muted);">Harmonic mean of precision and recall</div>
         </div>
         """, unsafe_allow_html=True)
         
@@ -220,8 +220,8 @@ if st.button("Run Live Model Evaluation Sweep", type="primary", use_container_wi
     with col1:
         st.markdown(f"""
         <div class="flex-header">
-            {get_svg_icon("terminal", size=24, color="#00796b")}
-            <h4 style="color: #004d40; font-weight: 600; margin: 0;">Classification Report</h4>
+            {get_svg_icon("terminal", size=24, color="var(--theme-primary)")}
+            <h4 style="color: var(--theme-green-dark); font-weight: 600; margin: 0;">Classification Report</h4>
         </div>
         """, unsafe_allow_html=True)
         st.markdown("Precision, recall, and F1-score breakdown per class category:")
@@ -239,12 +239,18 @@ if st.button("Run Live Model Evaluation Sweep", type="primary", use_container_wi
     with col2:
         st.markdown(f"""
         <div class="flex-header">
-            {get_svg_icon("chart", size=24, color="#00796b")}
-            <h4 style="color: #004d40; font-weight: 600; margin: 0;">Confusion Matrix Heatmap</h4>
+            {get_svg_icon("chart", size=24, color="var(--theme-primary)")}
+            <h4 style="color: var(--theme-green-dark); font-weight: 600; margin: 0;">Confusion Matrix Heatmap</h4>
         </div>
         """, unsafe_allow_html=True)
         st.markdown("Visual mapping of true target classes vs predicted categories:")
         
+        # Style matplotlib/seaborn text to be readable on both light and dark backgrounds
+        plt.rcParams['text.color'] = '#888888'
+        plt.rcParams['axes.labelcolor'] = '#888888'
+        plt.rcParams['xtick.color'] = '#888888'
+        plt.rcParams['ytick.color'] = '#888888'
+
         # Plot styled Confusion Matrix
         fig, ax = plt.subplots(figsize=(8, 6))
         # Custom emerald / green-teal hues for the matrix
@@ -252,8 +258,8 @@ if st.button("Run Live Model Evaluation Sweep", type="primary", use_container_wi
                     xticklabels=[c.title() for c in CLASS_NAMES], 
                     yticklabels=[c.title() for c in CLASS_NAMES], ax=ax,
                     cbar=True, annot_kws={"size": 12, "weight": "bold"})
-        ax.set_ylabel('True Category Label', fontsize=11, fontweight="bold", labelpad=10)
-        ax.set_xlabel('Predicted Category Label', fontsize=11, fontweight="bold", labelpad=10)
+        ax.set_ylabel('True Category Label', fontsize=11, fontweight="bold", labelpad=10, color='#888888')
+        ax.set_xlabel('Predicted Category Label', fontsize=11, fontweight="bold", labelpad=10, color='#888888')
         
         # Clean figure background
         fig.patch.set_facecolor('none')

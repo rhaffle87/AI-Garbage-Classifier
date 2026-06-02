@@ -38,7 +38,7 @@ if getattr(model, '_is_fallback', False):
 
 # Page Header
 st.markdown(f"""
-<div class="header-banner" style="background: linear-gradient(135deg, #0d47a1 0%, #1565c0 50%, #1976d2 100%); box-shadow: 0 10px 30px rgba(13, 71, 161, 0.15);">
+<div class="header-banner">
     <div style="display: flex; justify-content: center; align-items: center; gap: 16px; margin-bottom: 0.8rem;">
         {get_svg_icon("camera", size=48, color="#FFFFFF")}
         <h1 style="margin: 0 !important; color: white !important;">Classify Garbage</h1>
@@ -63,8 +63,8 @@ def display_predictions(probs, image_obj, threshold=0.70):
     with col1:
         st.markdown(f"""
         <div style="display: flex; align-items: center; gap: 8px; margin-top: 1rem; margin-bottom: 1rem;">
-            {get_svg_icon("camera", size=22, color="#1B5E20")}
-            <h4 style="margin: 0; color: #1B5E20;">Analyzed Visual</h4>
+            {get_svg_icon("camera", size=22, color="var(--theme-primary)")}
+            <h4 style="margin: 0; color: var(--theme-green-dark);">Analyzed Visual</h4>
         </div>
         """, unsafe_allow_html=True)
         if isinstance(image_obj, Image.Image):
@@ -75,8 +75,8 @@ def display_predictions(probs, image_obj, threshold=0.70):
     with col2:
         st.markdown(f"""
         <div style="display: flex; align-items: center; gap: 8px; margin-top: 1rem; margin-bottom: 1rem;">
-            {get_svg_icon("chart", size=22, color="#1B5E20")}
-            <h4 style="margin: 0; color: #1B5E20;">Classification Output</h4>
+            {get_svg_icon("chart", size=22, color="var(--theme-primary)")}
+            <h4 style="margin: 0; color: var(--theme-green-dark);">Classification Output</h4>
         </div>
         """, unsafe_allow_html=True)
         top_indices = np.argsort(probs)[::-1]
@@ -94,8 +94,8 @@ def display_predictions(probs, image_obj, threshold=0.70):
         st.markdown(f"""
         <div class="premium-card">
             {badge_html}
-            <h3 style="margin: 0.5rem 0 1rem 0; color: #1B5E20;">{top_class.title()}</h3>
-            <p style="font-size: 0.95rem; line-height: 1.5; color: #555; margin-bottom: 0;">
+            <h3 style="margin: 0.5rem 0 1rem 0; color: var(--theme-green-dark);">{top_class.title()}</h3>
+            <p style="font-size: 0.95rem; line-height: 1.5; color: var(--text-color); margin-bottom: 0;">
                 {RECYCLING_TIPS.get(top_class, "Follow general recycling instructions.")}
             </p>
         </div>
@@ -116,11 +116,11 @@ def display_predictions(probs, image_obj, threshold=0.70):
 with st.sidebar:
     st.markdown(f"""
     <div style="padding: 10px 0;">
-        <h4 style="margin: 0; color: #1B5E20; display: flex; align-items: center; gap: 8px;">
-            {get_svg_icon("settings", size=20, color="#1B5E20")}
+        <h4 style="margin: 0; color: var(--theme-green-dark); display: flex; align-items: center; gap: 8px;">
+            {get_svg_icon("settings", size=20, color="var(--theme-primary)")}
             <span>Inference Settings</span>
         </h4>
-        <p style="color: #666; font-size: 0.85rem; margin-top: 5px;">Fine-tune prediction sensitivity and filter out low-confidence hallucinations.</p>
+        <p style="color: var(--theme-text-muted); font-size: 0.85rem; margin-top: 5px;">Fine-tune prediction sensitivity and filter out low-confidence hallucinations.</p>
     </div>
     """, unsafe_allow_html=True)
     confidence_threshold = st.slider(
@@ -134,8 +134,8 @@ with st.sidebar:
 
 st.markdown(f"""
 <div class="flex-header">
-    {get_svg_icon("play", size=28, color="#2E7D32")}
-    <h3 style="color: #1B5E20; font-weight: 600;">Choose Input Source</h3>
+    {get_svg_icon("play", size=28, color="var(--theme-primary)")}
+    <h3 style="color: var(--theme-green-dark); font-weight: 600;">Choose Input Source</h3>
 </div>
 """, unsafe_allow_html=True)
 
@@ -144,7 +144,7 @@ tab1, tab2, tab3 = st.tabs(["Upload Image File", "Webcam Snapshot", "Live Camera
 with tab1:
     st.markdown("""
     <div style="padding: 1rem 0;">
-        <p style="color: #666; font-size: 0.95rem;">Upload a JPEG or PNG photograph from your local storage.</p>
+        <p style="color: var(--theme-text-muted); font-size: 0.95rem;">Upload a JPEG or PNG photograph from your local storage.</p>
     </div>
     """, unsafe_allow_html=True)
     uploaded_file = st.file_uploader("Choose an image file...", type=["jpg", "jpeg", "png"], label_visibility="collapsed")

@@ -30,7 +30,7 @@ def get_dataset_counts():
 
 def main():
     st.markdown(f"""
-    <div class="header-banner" style="background: linear-gradient(135deg, #2E7D32 0%, #1B5E20 50%, #0d5c14 100%);">
+    <div class="header-banner">
         <div style="display: flex; justify-content: center; align-items: center; gap: 16px; margin-bottom: 0.8rem;">
             {get_svg_icon("settings", size=48, color="#FFFFFF")}
             <h1 style="margin: 0 !important; color: white !important;">Train AI Model</h1>
@@ -42,8 +42,8 @@ def main():
     # Dataset summary section
     st.markdown(f"""
     <div class="flex-header">
-        {get_svg_icon("chart", size=28, color="#2E7D32")}
-        <h3 style="color: #1B5E20; font-weight: 600;">Dataset Distribution</h3>
+        {get_svg_icon("chart", size=28, color="var(--theme-primary)")}
+        <h3 style="color: var(--theme-green-dark); font-weight: 600;">Dataset Distribution</h3>
     </div>
     """, unsafe_allow_html=True)
     counts = get_dataset_counts()
@@ -56,7 +56,7 @@ def main():
         <div class="metric-card" style="margin-top: 1rem;">
             <div class="metric-label">Total Images Loaded</div>
             <div class="metric-value">{total_images:,}</div>
-            <div style="font-size: 0.85rem; color: #666; margin-top: 0.5rem;">
+            <div style="font-size: 0.85rem; color: var(--theme-text-muted); margin-top: 0.5rem;">
                 Images split across 6 classes of waste materials.
             </div>
         </div>
@@ -79,15 +79,15 @@ def main():
             "Class Name": [c.title() for c in counts.keys()],
             "Image Count": list(counts.values())
         })
-        st.bar_chart(df_counts, x="Class Name", y="Image Count", color="#2E7D32")
+        st.bar_chart(df_counts, x="Class Name", y="Image Count")
 
     st.divider()
     
     # Training wizard step-by-step
     st.markdown(f"""
     <div class="flex-header">
-        {get_svg_icon("settings", size=28, color="#2E7D32")}
-        <h3 style="color: #1B5E20; font-weight: 600;">Training Setup Wizard</h3>
+        {get_svg_icon("settings", size=28, color="var(--theme-primary)")}
+        <h3 style="color: var(--theme-green-dark); font-weight: 600;">Training Setup Wizard</h3>
     </div>
     """, unsafe_allow_html=True)
     col1, col2 = st.columns([1, 1])
@@ -96,10 +96,10 @@ def main():
         st.markdown(f"""
         <div class="premium-card" style="height: 100%;">
             <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 0.5rem;">
-                {get_svg_icon("cpu", size=20, color="#2E7D32")}
-                <h4 style="color: #2E7D32; margin: 0;">Step 1: Hyperparameters</h4>
+                {get_svg_icon("cpu", size=20, color="var(--theme-primary)")}
+                <h4 style="color: var(--theme-green-dark); margin: 0;">Step 1: Hyperparameters</h4>
             </div>
-            <p style="font-size: 0.9rem; color: #666; margin-bottom: 1rem;">Configure training complexity and optimization cycles.</p>
+            <p style="font-size: 0.9rem; color: var(--theme-text-muted); margin-bottom: 1rem;">Configure training complexity and optimization cycles.</p>
         """, unsafe_allow_html=True)
         
         epochs = st.number_input("Number of Epochs", min_value=1, max_value=100, value=10, 
@@ -111,10 +111,10 @@ def main():
         st.markdown(f"""
         <div class="premium-card" style="height: 100%;">
             <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 0.5rem;">
-                {get_svg_icon("settings", size=20, color="#2E7D32")}
-                <h4 style="color: #2E7D32; margin: 0;">Step 2: Execution Settings</h4>
+                {get_svg_icon("settings", size=20, color="var(--theme-primary)")}
+                <h4 style="color: var(--theme-green-dark); margin: 0;">Step 2: Execution Settings</h4>
             </div>
-            <p style="font-size: 0.9rem; color: #666; margin-bottom: 1rem;">Choose how training runs on your machine.</p>
+            <p style="font-size: 0.9rem; color: var(--theme-text-muted); margin-bottom: 1rem;">Choose how training runs on your machine.</p>
         """, unsafe_allow_html=True)
         
         run_in_app = st.checkbox("Run synchronously inside app (blocks user actions)", value=False)
@@ -160,8 +160,8 @@ def main():
         st.divider()
         st.markdown(f"""
         <div class="flex-header">
-            {get_svg_icon("cpu", size=24, color="#2E7D32")}
-            <h4 style="color: #1B5E20; font-weight: 600; margin: 0;">Background Tasks Monitor</h4>
+            {get_svg_icon("cpu", size=24, color="var(--theme-primary)")}
+            <h4 style="color: var(--theme-green-dark); font-weight: 600; margin: 0;">Background Tasks Monitor</h4>
         </div>
         """, unsafe_allow_html=True)
         def is_running(pid):
@@ -199,8 +199,8 @@ def main():
     st.divider()
     st.markdown(f"""
     <div class="flex-header">
-        {get_svg_icon("terminal", size=28, color="#2E7D32")}
-        <h3 style="color: #1B5E20; font-weight: 600;">Training Logs Output Console</h3>
+        {get_svg_icon("terminal", size=28, color="var(--theme-primary)")}
+        <h3 style="color: var(--theme-green-dark); font-weight: 600;">Training Logs Output Console</h3>
     </div>
     """, unsafe_allow_html=True)
     
@@ -237,8 +237,8 @@ def main():
         st.divider()
         st.markdown(f"""
         <div class="flex-header">
-            {get_svg_icon("chart", size=28, color="#2E7D32")}
-            <h3 style="color: #1B5E20; font-weight: 600;">Training Results & Performance Curves</h3>
+            {get_svg_icon("chart", size=28, color="var(--theme-primary)")}
+            <h3 style="color: var(--theme-green-dark); font-weight: 600;">Training Results & Performance Curves</h3>
         </div>
         """, unsafe_allow_html=True)
         st.image(plot_path, use_column_width=True, caption="Training metrics showing accuracy and loss progression.")

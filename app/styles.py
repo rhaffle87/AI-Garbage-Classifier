@@ -33,12 +33,35 @@ def inject_custom_css():
     """Injects custom CSS layout parameters, typography, and bento-cards definitions.
 
     Imports Google Fonts 'Outfit' and embeds design rules directly into Streamlit's 
-    root HTML markup context.
+    root HTML markup context, fully supporting Light, Dark, and Custom themes dynamically.
     """
     css = """
     <style>
     /* Import modern typography */
     @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap&font-display=swap');
+    
+    /* Theme variable mapping based on active Streamlit theme */
+    :root {
+        --theme-primary: var(--primary-color);
+        --theme-green-dark: color-mix(in srgb, var(--primary-color) 85%, var(--text-color));
+        --theme-green-light: color-mix(in srgb, var(--primary-color) 70%, #ffffff 30%);
+        
+        /* Dynamic card tokens */
+        --theme-card-bg: color-mix(in srgb, var(--background-color) 94%, var(--text-color) 6%);
+        --theme-card-border: color-mix(in srgb, var(--primary-color) 15%, transparent);
+        --theme-card-shadow: 0 8px 30px color-mix(in srgb, var(--text-color) 4%, transparent);
+        --theme-card-shadow-hover: 0 16px 40px color-mix(in srgb, var(--primary-color) 12%, transparent);
+        
+        /* Text muted */
+        --theme-text-muted: color-mix(in srgb, var(--text-color) 60%, transparent);
+        
+        /* Banners */
+        --theme-banner-bg: linear-gradient(135deg, 
+            color-mix(in srgb, var(--primary-color) 80%, #000) 0%, 
+            var(--primary-color) 50%, 
+            color-mix(in srgb, var(--primary-color) 80%, #fff) 100%
+        );
+    }
     
     /* Apply typography and colors with system fallbacks to prevent font shift flashing */
     html, body, [class*="css"] {
@@ -59,31 +82,32 @@ def inject_custom_css():
     
     /* Glassmorphism card utility */
     .premium-card {
-        background: rgba(255, 255, 255, 0.95);
-        border: 1px solid rgba(46, 125, 50, 0.12);
+        background: var(--theme-card-bg) !important;
+        color: var(--text-color) !important;
+        border: 1px solid var(--theme-card-border) !important;
         border-radius: 16px;
         padding: 1.8rem;
-        box-shadow: 0 8px 30px rgba(46, 125, 50, 0.04);
+        box-shadow: var(--theme-card-shadow) !important;
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         margin-bottom: 1.5rem;
         cursor: pointer;
     }
     
     .premium-card:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 16px 40px rgba(46, 125, 50, 0.1);
-        border-color: rgba(46, 125, 50, 0.25);
+        transform: translateY(-4px) !important;
+        box-shadow: var(--theme-card-shadow-hover) !important;
+        border-color: var(--theme-primary) !important;
     }
     
     /* Header Banner styling */
     .header-banner {
-        background: linear-gradient(135deg, #1B5E20 0%, #2E7D32 50%, #4CAF50 100%);
-        color: white;
+        background: var(--theme-banner-bg) !important;
+        color: white !important;
         padding: 2.5rem 2rem;
         border-radius: 20px;
         text-align: center;
         margin-bottom: 2rem;
-        box-shadow: 0 10px 30px rgba(27, 94, 32, 0.15);
+        box-shadow: 0 10px 30px color-mix(in srgb, var(--primary-color) 20%, transparent) !important;
         position: relative;
         overflow: hidden;
     }
@@ -114,25 +138,25 @@ def inject_custom_css():
  
     /* Metric card styles */
     .metric-card {
-        background: linear-gradient(145deg, #ffffff, #fcfdfe);
-        border: 1px solid rgba(46, 125, 50, 0.1);
+        background: var(--theme-card-bg) !important;
+        border: 1px solid var(--theme-card-border) !important;
         border-radius: 12px;
         padding: 1.2rem;
         text-align: center;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.02);
-        border-top: 4px solid #2E7D32;
+        box-shadow: var(--theme-card-shadow) !important;
+        border-top: 4px solid var(--theme-primary) !important;
     }
  
     .metric-value {
         font-size: 2.2rem;
         font-weight: 700;
-        color: #1B5E20;
+        color: var(--theme-green-dark) !important;
         margin: 0.2rem 0;
     }
  
     .metric-label {
         font-size: 0.9rem;
-        color: #666;
+        color: var(--theme-text-muted) !important;
         text-transform: uppercase;
         letter-spacing: 0.5px;
     }
@@ -152,25 +176,25 @@ def inject_custom_css():
     }
     
     .badge-high {
-        background-color: #E8F5E9;
-        color: #2E7D32;
-        border: 1px solid #C8E6C9;
+        background-color: color-mix(in srgb, #2E7D32 12%, var(--background-color)) !important;
+        color: color-mix(in srgb, #2E7D32 85%, var(--text-color)) !important;
+        border: 1px solid color-mix(in srgb, #2E7D32 25%, transparent) !important;
     }
     
     .badge-low {
-        background-color: #FFF3E0;
-        color: #E65100;
-        border: 1px solid #FFE0B2;
+        background-color: color-mix(in srgb, #E65100 12%, var(--background-color)) !important;
+        color: color-mix(in srgb, #E65100 85%, var(--text-color)) !important;
+        border: 1px solid color-mix(in srgb, #E65100 25%, transparent) !important;
     }
     
     /* Log console styling */
     .terminal-console {
-        background-color: #1E1E1E;
-        color: #D4D4D4;
+        background-color: #1E1E1E !important;
+        color: #D4D4D4 !important;
         font-family: 'Courier New', Courier, monospace;
         padding: 1.2rem;
         border-radius: 10px;
-        border-left: 6px solid #4CAF50;
+        border-left: 6px solid var(--theme-primary) !important;
         max-height: 350px;
         overflow-y: auto;
         box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
@@ -191,9 +215,9 @@ def inject_custom_css():
         font-weight: 500;
         margin-right: 0.5rem;
         margin-bottom: 0.5rem;
-        background-color: #E8F5E9;
-        color: #2E7D32;
-        border: 1px solid rgba(46, 125, 50, 0.15);
+        background-color: color-mix(in srgb, var(--primary-color) 12%, var(--background-color)) !important;
+        color: color-mix(in srgb, var(--primary-color) 85%, var(--text-color)) !important;
+        border: 1px solid color-mix(in srgb, var(--primary-color) 20%, transparent) !important;
     }
     
     /* Custom spacing */
@@ -204,8 +228,8 @@ def inject_custom_css():
     
     /* Premium Sidebar Styling */
     section[data-testid="stSidebar"] {
-        background-color: #f7faf8 !important;
-        border-right: 1px solid rgba(46, 125, 50, 0.08) !important;
+        background-color: var(--secondary-background-color) !important;
+        border-right: 1px solid color-mix(in srgb, var(--primary-color) 8%, transparent) !important;
     }
     
     [data-testid="stSidebarNav"] {
@@ -220,9 +244,9 @@ def inject_custom_css():
         font-family: 'Outfit', sans-serif !important;
         font-size: 1.2rem !important;
         font-weight: 700 !important;
-        color: #1b5e20 !important;
+        color: var(--theme-green-dark) !important;
         letter-spacing: -0.3px !important;
-        border-bottom: 1px solid rgba(46, 125, 50, 0.08) !important;
+        border-bottom: 1px solid color-mix(in srgb, var(--primary-color) 8%, transparent) !important;
         margin-bottom: 1rem !important;
     }
     
@@ -243,10 +267,11 @@ def inject_custom_css():
         border-radius: 12px !important;
         font-family: 'Outfit', sans-serif !important;
         font-weight: 500 !important;
-        color: #4b5563 !important;
+        color: var(--text-color) !important;
         background-color: transparent !important;
         transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
         text-decoration: none !important;
+        opacity: 0.8;
     }
     
     /* Hide default streamlit page icon span ONLY if it's the icon (first of multiple spans) */
@@ -269,16 +294,18 @@ def inject_custom_css():
     
     /* Hover state */
     [data-testid="stSidebarNav"] ul li a:hover {
-        background-color: rgba(46, 125, 50, 0.05) !important;
-        color: #1b5e20 !important;
+        background-color: color-mix(in srgb, var(--primary-color) 8%, transparent) !important;
+        color: var(--theme-green-dark) !important;
+        opacity: 1 !important;
     }
     
     /* Active navigation link */
     [data-testid="stSidebarNav"] ul li a[aria-current="page"] {
-        background-color: #e8f5e9 !important;
-        color: #2e7d32 !important;
+        background-color: color-mix(in srgb, var(--primary-color) 12%, transparent) !important;
+        color: var(--theme-primary) !important;
         font-weight: 600 !important;
-        box-shadow: 0 4px 12px rgba(46, 125, 50, 0.06) !important;
+        box-shadow: 0 4px 12px color-mix(in srgb, var(--primary-color) 6%, transparent) !important;
+        opacity: 1 !important;
     }
 
     /* Rename first link 'streamlit app' to 'Home' */
@@ -342,8 +369,8 @@ def render_sidebar_model_status():
     st.sidebar.markdown("---")
     st.sidebar.markdown(f"""
     <div style="padding: 10px 0 5px 0;">
-        <h4 style="margin: 0; color: #1B5E20; display: flex; align-items: center; gap: 8px; font-size: 1.05rem;">
-            {get_svg_icon("shield", size=18, color="#1B5E20")}
+        <h4 style="margin: 0; color: var(--theme-green-dark); display: flex; align-items: center; gap: 8px; font-size: 1.05rem; font-weight: 600;">
+            {get_svg_icon("shield", size=18, color="var(--theme-primary)")}
             <span>Model Status</span>
         </h4>
     </div>
@@ -353,37 +380,37 @@ def render_sidebar_model_status():
         mtime = os.path.getmtime(PROD_MODEL_PATH)
         dt = datetime.fromtimestamp(mtime).strftime('%Y-%m-%d %H:%M')
         st.sidebar.markdown(f"""
-        <div style="background-color: #E8F5E9; border: 1px solid #C8E6C9; border-radius: 12px; padding: 12px; margin-bottom: 10px; box-shadow: 0 2px 8px rgba(46,125,50,0.05);">
-            <div style="color: #2E7D32; font-weight: 700; font-size: 0.8rem; letter-spacing: 0.5px;">🛡️ PRODUCTION PROMOTED</div>
-            <div style="color: #4b5563; font-size: 0.75rem; margin-top: 4px; line-height: 1.4;">Active model met the 75% accuracy quality gate constraint.</div>
-            <div style="color: #9ca3af; font-size: 0.7rem; margin-top: 8px; font-weight: 500;">Last Promoted: {dt}</div>
+        <div style="background-color: color-mix(in srgb, #2E7D32 12%, var(--background-color)); border: 1px solid color-mix(in srgb, #2E7D32 25%, transparent); border-radius: 12px; padding: 12px; margin-bottom: 10px; box-shadow: var(--theme-card-shadow);">
+            <div style="color: color-mix(in srgb, #2E7D32 85%, var(--text-color)); font-weight: 700; font-size: 0.8rem; letter-spacing: 0.5px;">🛡️ PRODUCTION PROMOTED</div>
+            <div style="color: var(--text-color); opacity: 0.85; font-size: 0.75rem; margin-top: 4px; line-height: 1.4;">Active model met the 75% accuracy quality gate constraint.</div>
+            <div style="color: var(--text-color); opacity: 0.5; font-size: 0.7rem; margin-top: 8px; font-weight: 500;">Last Promoted: {dt}</div>
         </div>
         """, unsafe_allow_html=True)
     elif os.path.exists(MODEL_PATH):
         mtime = os.path.getmtime(MODEL_PATH)
         dt = datetime.fromtimestamp(mtime).strftime('%Y-%m-%d %H:%M')
         st.sidebar.markdown(f"""
-        <div style="background-color: #FFF3E0; border: 1px solid #FFE0B2; border-radius: 12px; padding: 12px; margin-bottom: 10px; box-shadow: 0 2px 8px rgba(230,81,0,0.05);">
-            <div style="color: #E65100; font-weight: 700; font-size: 0.8rem; letter-spacing: 0.5px;">⚠️ CHECKPOINT DRAFT</div>
-            <div style="color: #4b5563; font-size: 0.75rem; margin-top: 4px; line-height: 1.4;">Latest training checkpoint. Quality gate not yet passed/evaluated.</div>
-            <div style="color: #9ca3af; font-size: 0.7rem; margin-top: 8px; font-weight: 500;">Saved: {dt}</div>
+        <div style="background-color: color-mix(in srgb, #E65100 12%, var(--background-color)); border: 1px solid color-mix(in srgb, #E65100 25%, transparent); border-radius: 12px; padding: 12px; margin-bottom: 10px; box-shadow: var(--theme-card-shadow);">
+            <div style="color: color-mix(in srgb, #E65100 85%, var(--text-color)); font-weight: 700; font-size: 0.8rem; letter-spacing: 0.5px;">⚠️ CHECKPOINT DRAFT</div>
+            <div style="color: var(--text-color); opacity: 0.85; font-size: 0.75rem; margin-top: 4px; line-height: 1.4;">Latest training checkpoint. Quality gate not yet passed/evaluated.</div>
+            <div style="color: var(--text-color); opacity: 0.5; font-size: 0.7rem; margin-top: 8px; font-weight: 500;">Saved: {dt}</div>
         </div>
         """, unsafe_allow_html=True)
     elif os.path.exists(LEGACY_MODEL_PATH):
         mtime = os.path.getmtime(LEGACY_MODEL_PATH)
         dt = datetime.fromtimestamp(mtime).strftime('%Y-%m-%d %H:%M')
         st.sidebar.markdown(f"""
-        <div style="background-color: #ECEFF1; border: 1px solid #CFD8DC; border-radius: 12px; padding: 12px; margin-bottom: 10px;">
-            <div style="color: #37474F; font-weight: 700; font-size: 0.8rem; letter-spacing: 0.5px;">📁 LEGACY FALLBACK</div>
-            <div style="color: #4b5563; font-size: 0.75rem; margin-top: 4px; line-height: 1.4;">Using legacy model binary.</div>
-            <div style="color: #9ca3af; font-size: 0.7rem; margin-top: 8px; font-weight: 500;">Saved: {dt}</div>
+        <div style="background-color: color-mix(in srgb, var(--text-color) 8%, var(--background-color)); border: 1px solid color-mix(in srgb, var(--text-color) 15%, transparent); border-radius: 12px; padding: 12px; margin-bottom: 10px; box-shadow: var(--theme-card-shadow);">
+            <div style="color: color-mix(in srgb, var(--text-color) 75%, transparent); font-weight: 700; font-size: 0.8rem; letter-spacing: 0.5px;">📁 LEGACY FALLBACK</div>
+            <div style="color: var(--text-color); opacity: 0.85; font-size: 0.75rem; margin-top: 4px; line-height: 1.4;">Using legacy model binary.</div>
+            <div style="color: var(--text-color); opacity: 0.5; font-size: 0.7rem; margin-top: 8px; font-weight: 500;">Saved: {dt}</div>
         </div>
         """, unsafe_allow_html=True)
     else:
         st.sidebar.markdown("""
-        <div style="background-color: #FFEBEE; border: 1px solid #FFCDD2; border-radius: 12px; padding: 12px; margin-bottom: 10px;">
-            <div style="color: #C62828; font-weight: 700; font-size: 0.8rem; letter-spacing: 0.5px;">❌ NO TRAINED MODEL</div>
-            <div style="color: #4b5563; font-size: 0.75rem; margin-top: 4px; line-height: 1.4;">Active inference is falling back to untrained dummy classifier.</div>
+        <div style="background-color: color-mix(in srgb, #C62828 12%, var(--background-color)); border: 1px solid color-mix(in srgb, #C62828 25%, transparent); border-radius: 12px; padding: 12px; margin-bottom: 10px;">
+            <div style="color: color-mix(in srgb, #C62828 85%, var(--text-color)); font-weight: 700; font-size: 0.8rem; letter-spacing: 0.5px;">❌ NO TRAINED MODEL</div>
+            <div style="color: var(--text-color); opacity: 0.85; font-size: 0.75rem; margin-top: 4px; line-height: 1.4;">Active inference is falling back to untrained dummy classifier.</div>
         </div>
         """, unsafe_allow_html=True)
 

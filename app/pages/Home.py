@@ -33,8 +33,8 @@ st.markdown(f"""
 # Core Features Grid (using premium cards)
 st.markdown(f"""
 <div class="flex-header">
-    {get_svg_icon("leaf", size=28, color="#2E7D32")}
-    <h3 style="color: #1B5E20; font-weight: 600;">Core Capabilities</h3>
+    {get_svg_icon("leaf", size=28, color="var(--theme-primary)")}
+    <h3 style="color: var(--theme-green-dark); font-weight: 600;">Core Capabilities</h3>
 </div>
 """, unsafe_allow_html=True)
 
@@ -44,10 +44,10 @@ with col1:
     st.markdown(f"""
     <div class="premium-card">
         <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 0.5rem;">
-            {get_svg_icon("camera", size=22, color="#2E7D32")}
-            <h4 style="color: #2E7D32; margin: 0;">Instant Predictions</h4>
+            {get_svg_icon("camera", size=22, color="var(--theme-primary)")}
+            <h4 style="color: var(--theme-primary); margin: 0;">Instant Predictions</h4>
         </div>
-        <p style="font-size: 0.95rem; color: #555; line-height: 1.5; margin: 0;">
+        <p style="font-size: 0.95rem; color: var(--text-color); opacity: 0.85; line-height: 1.5; margin: 0;">
             Upload an image, take a webcam snapshot, or stream live video to instantly classify waste into 6 categories with confidence scores.
         </p>
     </div>
@@ -57,10 +57,10 @@ with col2:
     st.markdown(f"""
     <div class="premium-card">
         <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 0.5rem;">
-            {get_svg_icon("cpu", size=22, color="#2E7D32")}
-            <h4 style="color: #2E7D32; margin: 0;">Transfer Learning</h4>
+            {get_svg_icon("cpu", size=22, color="var(--theme-primary)")}
+            <h4 style="color: var(--theme-primary); margin: 0;">Transfer Learning</h4>
         </div>
-        <p style="font-size: 0.95rem; color: #555; line-height: 1.5; margin: 0;">
+        <p style="font-size: 0.95rem; color: var(--text-color); opacity: 0.85; line-height: 1.5; margin: 0;">
             Leverages a custom MobileNetV2 architecture pretrained on ImageNet. Quick training pipeline customizable for your datasets.
         </p>
     </div>
@@ -70,10 +70,10 @@ with col3:
     st.markdown(f"""
     <div class="premium-card">
         <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 0.5rem;">
-            {get_svg_icon("chart", size=22, color="#2E7D32")}
-            <h4 style="color: #2E7D32; margin: 0;">Deep Evaluation</h4>
+            {get_svg_icon("chart", size=22, color="var(--theme-primary)")}
+            <h4 style="color: var(--theme-primary); margin: 0;">Deep Evaluation</h4>
         </div>
-        <p style="font-size: 0.95rem; color: #555; line-height: 1.5; margin: 0;">
+        <p style="font-size: 0.95rem; color: var(--text-color); opacity: 0.85; line-height: 1.5; margin: 0;">
             Track validation accuracy, classification reports, precision, recall, and visualize results using interactive Confusion Matrices.
         </p>
     </div>
@@ -85,14 +85,14 @@ if summary:
     st.divider()
     st.markdown(f"""
     <div class="flex-header">
-        {get_svg_icon("cpu", size=28, color="#2E7D32")}
-        <h3 style="color: #1B5E20; font-weight: 600;">Latest MLOps Pipeline Status</h3>
+        {get_svg_icon("cpu", size=28, color="var(--theme-primary)")}
+        <h3 style="color: var(--theme-green-dark); font-weight: 600;">Latest MLOps Pipeline Status</h3>
     </div>
     """, unsafe_allow_html=True)
     
-    status_color = "#2E7D32" if summary["promoted"] == "Yes" else "#C62828"
-    status_bg = "#E8F5E9" if summary["promoted"] == "Yes" else "#FFEBEE"
-    status_border = "#C8E6C9" if summary["promoted"] == "Yes" else "#FFCDD2"
+    status_color = "color-mix(in srgb, #2E7D32 85%, var(--text-color))" if summary["promoted"] == "Yes" else "color-mix(in srgb, #C62828 85%, var(--text-color))"
+    status_bg = "color-mix(in srgb, #2E7D32 12%, var(--background-color))" if summary["promoted"] == "Yes" else "color-mix(in srgb, #C62828 12%, var(--background-color))"
+    status_border = "color-mix(in srgb, #2E7D32 25%, transparent)" if summary["promoted"] == "Yes" else "color-mix(in srgb, #C62828 25%, transparent)"
     status_text = "🛡️ PASSED & PROMOTED TO PRODUCTION" if summary["promoted"] == "Yes" else "❌ REJECTED BY QUALITY GATE (Draft Checkpoint)"
     
     col_p1, col_p2 = st.columns([1, 1])
@@ -100,25 +100,25 @@ if summary:
         st.markdown(f"""
         <div class="premium-card" style="height: 100%;">
             <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 0.8rem;">
-                {get_svg_icon("settings", size=20, color="#1B5E20")}
-                <h4 style="color: #1B5E20; margin: 0; font-size: 1.05rem;">Pipeline Settings & Run Info</h4>
+                {get_svg_icon("settings", size=20, color="var(--theme-primary)")}
+                <h4 style="color: var(--theme-green-dark); margin: 0; font-size: 1.05rem;">Pipeline Settings & Run Info</h4>
             </div>
             <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
-                <tr style="border-bottom: 1px solid #eee; height: 35px;">
-                    <td style="color: #666; font-weight: 500;">Run Date</td>
-                    <td style="text-align: right; font-weight: 600; color: #333;">{summary["date"]}</td>
+                <tr style="border-bottom: 1px solid color-mix(in srgb, var(--text-color) 10%, transparent); height: 35px;">
+                    <td style="color: var(--theme-text-muted); font-weight: 500;">Run Date</td>
+                    <td style="text-align: right; font-weight: 600; color: var(--text-color);">{summary["date"]}</td>
                 </tr>
-                <tr style="border-bottom: 1px solid #eee; height: 35px;">
-                    <td style="color: #666; font-weight: 500;">Training Duration</td>
-                    <td style="text-align: right; font-weight: 600; color: #333;">{summary["duration"]}</td>
+                <tr style="border-bottom: 1px solid color-mix(in srgb, var(--text-color) 10%, transparent); height: 35px;">
+                    <td style="color: var(--theme-text-muted); font-weight: 500;">Training Duration</td>
+                    <td style="text-align: right; font-weight: 600; color: var(--text-color);">{summary["duration"]}</td>
                 </tr>
-                <tr style="border-bottom: 1px solid #eee; height: 35px;">
-                    <td style="color: #666; font-weight: 500;">Training Epochs</td>
-                    <td style="text-align: right; font-weight: 600; color: #333;">{summary["epochs"]} epochs</td>
+                <tr style="border-bottom: 1px solid color-mix(in srgb, var(--text-color) 10%, transparent); height: 35px;">
+                    <td style="color: var(--theme-text-muted); font-weight: 500;">Training Epochs</td>
+                    <td style="text-align: right; font-weight: 600; color: var(--text-color);">{summary["epochs"]} epochs</td>
                 </tr>
                 <tr style="height: 35px;">
-                    <td style="color: #666; font-weight: 500;">Data Ingestion Format</td>
-                    <td style="text-align: right; font-weight: 600; color: #333;">{summary["format"]}</td>
+                    <td style="color: var(--theme-text-muted); font-weight: 500;">Data Ingestion Format</td>
+                    <td style="text-align: right; font-weight: 600; color: var(--text-color);">{summary["format"]}</td>
                 </tr>
             </table>
         </div>
@@ -128,21 +128,21 @@ if summary:
         st.markdown(f"""
         <div class="premium-card" style="height: 100%;">
             <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 0.8rem;">
-                {get_svg_icon("chart", size=20, color="#1B5E20")}
-                <h4 style="color: #1B5E20; margin: 0; font-size: 1.05rem;">Validation Accuracy & Promotion</h4>
+                {get_svg_icon("chart", size=20, color="var(--theme-primary)")}
+                <h4 style="color: var(--theme-green-dark); margin: 0; font-size: 1.05rem;">Validation Accuracy & Promotion</h4>
             </div>
             <div style="display: flex; gap: 15px; margin-bottom: 12px;">
-                <div style="flex: 1; background-color: #F9FAFB; border: 1px solid #F3F4F6; border-radius: 8px; padding: 10px; text-align: center;">
-                    <div style="font-size: 0.7rem; color: #9CA3AF; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;">Test Accuracy</div>
-                    <div style="font-size: 1.5rem; font-weight: 700; color: #1B5E20; margin-top: 2px;">{summary["accuracy"]}</div>
+                <div style="flex: 1; background-color: color-mix(in srgb, var(--background-color) 96%, var(--text-color) 4%); border: 1px solid color-mix(in srgb, var(--text-color) 8%, transparent); border-radius: 8px; padding: 10px; text-align: center;">
+                    <div style="font-size: 0.7rem; color: var(--theme-text-muted); text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;">Test Accuracy</div>
+                    <div style="font-size: 1.5rem; font-weight: 700; color: var(--theme-green-dark); margin-top: 2px;">{summary["accuracy"]}</div>
                 </div>
-                <div style="flex: 1; background-color: #F9FAFB; border: 1px solid #F3F4F6; border-radius: 8px; padding: 10px; text-align: center;">
-                    <div style="font-size: 0.7rem; color: #9CA3AF; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;">Macro F1-Score</div>
-                    <div style="font-size: 1.5rem; font-weight: 700; color: #0288D1; margin-top: 2px;">{summary["f1"]}</div>
+                <div style="flex: 1; background-color: color-mix(in srgb, var(--background-color) 96%, var(--text-color) 4%); border: 1px solid color-mix(in srgb, var(--text-color) 8%, transparent); border-radius: 8px; padding: 10px; text-align: center;">
+                    <div style="font-size: 0.7rem; color: var(--theme-text-muted); text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;">Macro F1-Score</div>
+                    <div style="font-size: 1.5rem; font-weight: 700; color: color-mix(in srgb, #0288D1 85%, var(--text-color)); margin-top: 2px;">{summary["f1"]}</div>
                 </div>
             </div>
             <div style="background-color: {status_bg}; border: 1px solid {status_border}; border-radius: 8px; padding: 10px; text-align: center;">
-                <div style="font-size: 0.65rem; color: #6B7280; text-transform: uppercase; font-weight: 700; margin-bottom: 2px; letter-spacing: 0.5px;">Promotion Verdict</div>
+                <div style="font-size: 0.65rem; color: var(--theme-text-muted); text-transform: uppercase; font-weight: 700; margin-bottom: 2px; letter-spacing: 0.5px;">Promotion Verdict</div>
                 <div style="color: {status_color}; font-weight: 700; font-size: 0.8rem; letter-spacing: 0.2px;">{status_text}</div>
             </div>
         </div>
@@ -152,8 +152,8 @@ if summary:
 st.divider()
 st.markdown(f"""
 <div class="flex-header">
-    {get_svg_icon("recycle", size=28, color="#2E7D32")}
-    <h3 style="color: #1B5E20; font-weight: 600;">Recycling Impact Calculator</h3>
+    {get_svg_icon("recycle", size=28, color="var(--theme-primary)")}
+    <h3 style="color: var(--theme-green-dark); font-weight: 600;">Recycling Impact Calculator</h3>
 </div>
 """, unsafe_allow_html=True)
 st.markdown("Select or enter the items you are planning to recycle to see the estimated positive impact on our planet!")
@@ -181,17 +181,17 @@ with calc_col2:
     <div class="metric-card" style="margin-bottom: 1rem;">
         <div class="metric-label">💨 Carbon Footprint Reduced</div>
         <div class="metric-value">{co2_saved:.2f} kg</div>
-        <div style="font-size: 0.85rem; color: #666;">CO2 emissions prevented from entering the atmosphere</div>
+        <div style="font-size: 0.85rem; color: var(--theme-text-muted);">CO2 emissions prevented from entering the atmosphere</div>
     </div>
     <div class="metric-card" style="margin-bottom: 1rem;">
         <div class="metric-label">⚡ Energy Conserved</div>
         <div class="metric-value">{energy_saved:.2f} kWh</div>
-        <div style="font-size: 0.85rem; color: #666;">Equivalent to running a typical LED TV for {energy_saved*30:.1f} hours</div>
+        <div style="font-size: 0.85rem; color: var(--theme-text-muted);">Equivalent to running a typical LED TV for {energy_saved*30:.1f} hours</div>
     </div>
     <div class="metric-card" style="margin-bottom: 1rem;">
         <div class="metric-label">🗑️ Landfill Space Saved</div>
         <div class="metric-value">{landfill_saved:.1f} Liters</div>
-        <div style="font-size: 0.85rem; color: #666;">Volume of waste kept out of municipal landfills</div>
+        <div style="font-size: 0.85rem; color: var(--theme-text-muted);">Volume of waste kept out of municipal landfills</div>
     </div>
     """, unsafe_allow_html=True)
 
@@ -199,8 +199,8 @@ with calc_col2:
 st.divider()
 st.markdown(f"""
 <div class="flex-header">
-    {get_svg_icon("info", size=28, color="#2E7D32")}
-    <h3 style="color: #1B5E20; font-weight: 600;">Waste Sorting Quick Reference</h3>
+    {get_svg_icon("info", size=28, color="var(--theme-primary)")}
+    <h3 style="color: var(--theme-green-dark); font-weight: 600;">Waste Sorting Quick Reference</h3>
 </div>
 """, unsafe_allow_html=True)
 with st.expander("Learn about the 6 waste categories classified by this AI"):
@@ -217,7 +217,7 @@ st.divider()
 st.info("👈 **Use the sidebar** to navigate between pages. Start by checking out the **Predict** page to see it in action!")
 
 st.markdown("""
-<div style='text-align: center; margin-top: 3rem; color: #888;'>
+<div style='text-align: center; margin-top: 3rem; color: var(--theme-text-muted);'>
     <small>Built with ❤️ using Streamlit, TensorFlow & MobileNetV2</small>
 </div>
 """, unsafe_allow_html=True)
