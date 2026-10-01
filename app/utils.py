@@ -153,7 +153,7 @@ def preprocess_image(image, target_size=None):
         if isinstance(image, Image.Image):
             image = image.convert("RGB")
             image = np.array(image)
-    except Exception as e:
+    except (ImportError, ValueError, OSError) as e:
         import logging
 
         logging.warning(f"Image conversion failed in preprocess_image: {e}")

@@ -12,15 +12,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: '3.12'
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
       - name: Run tests
+        env:
+          PYTHONPATH: .
         run: |
-          python -c "from tests.test_model import test_load_model, test_predict; test_load_model(); test_predict(); print('model tests passed')"
-          python -c "from tests.test_app import test_model_loading, test_prediction_with_random_image; test_model_loading(); test_prediction_with_random_image(); print('app tests passed')"
-          python -c "from tests.test_train_script import test_train_dry_run; test_train_dry_run(); print('train dry-run passed')"
+          pytest tests/

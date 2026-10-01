@@ -133,7 +133,7 @@ def evaluate_and_promote(min_accuracy_threshold=0.75):
             )
 
         return report, cm, promoted
-    except Exception as e:
+    except (ValueError, OSError, ImportError) as e:
         print(f"[Evaluation Error] Evaluation or promotion decision failed: {e}\n")
         return None, None, False
 
@@ -183,10 +183,10 @@ Duration: {duration_sec:.2f} seconds
                 print(
                     "[MLflow] Successfully logged pipeline metrics to active MLflow run."
                 )
-        except Exception as e:
+        except (ImportError, Exception) as e:
             print(f"[MLflow Warning] Failed to log additional pipeline metrics: {e}")
 
-    except Exception as e:
+    except OSError as e:
         print(f"[Summary Error] Failed to write run summary: {e}\n")
 
 

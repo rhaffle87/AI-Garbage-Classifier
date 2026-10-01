@@ -40,7 +40,7 @@ def load_model(model_path=None):
             raise FileNotFoundError("Model file not found")
         m._is_fallback = False
         return m
-    except Exception as e:
+    except (FileNotFoundError, ImportError, ValueError, OSError) as e:
 
         import warnings
 
@@ -100,7 +100,7 @@ def train_model_pipeline(dataset_dir, epochs=10, model_path=None):
         # Determine total size dynamically (fallback to 2527 if slow/fails)
         try:
             total_images = sum(1 for _ in full_dataset)
-        except Exception:
+        except (ValueError, TypeError, IOError):
             total_images = 2527
 
         val_split = 0.2 if total_images >= 30 else 0.0
@@ -311,7 +311,7 @@ def train_model_pipeline(dataset_dir, epochs=10, model_path=None):
         try:
             model = tf.keras.models.load_model(checkpoint_path)
             logging.info("Loaded best model weights from checkpoint.")
-        except Exception as e:
+        except (ValueError, OSError, ImportError) as e:
             logging.warning(
                 f"Could not load best model checkpoint, using final weights: {e}"
             )
@@ -353,7 +353,7 @@ def predict(model, image):
             target_size = IMG_SIZE
         else:
             target_size = (h, w)
-    except Exception:
+    except (AttributeError, IndexError, TypeError):
         from app.config import IMG_SIZE
 
         target_size = IMG_SIZE

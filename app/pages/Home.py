@@ -21,14 +21,12 @@ inject_custom_css()
 # Hero Section
 st.markdown(
     f"""
-<div class="header-banner" style="background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%) !important; padding: 3rem 2rem; border-radius: 20px; text-align: center; margin-bottom: 2.5rem; box-shadow: 0 12px 35px rgba(30, 60, 114, 0.2) !important;">
+<div class="header-banner">
     <div style="display: flex; justify-content: center; align-items: center; gap: 16px; margin-bottom: 0.8rem;">
         {get_svg_icon("recycle", size=48, color="#FFFFFF")}
-        <h1 style="margin: 0 !important; color: white !important; font-size: 3.2rem !important; letter-spacing: -0.5px;">AI Garbage Classifier</h1>
+        <h1 style="margin: 0 !important; color: white !important;">AI Garbage Classifier</h1>
     </div>
-    <p style="font-size: 1.2rem !important; color: rgba(255, 255, 255, 0.95) !important; max-width: 750px; margin: 0 auto !important; font-weight: 400 !important; line-height: 1.6;">
-        A smart, modern way to identify and sort your waste using deep learning and neural network image classification. Make an impact on the environment through proper recycling practices.
-    </p>
+    <p>A smart, modern way to identify and sort your waste using deep learning and neural network image classification.</p>
 </div>
 """,
     unsafe_allow_html=True,
