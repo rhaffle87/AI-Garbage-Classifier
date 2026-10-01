@@ -1,4 +1,5 @@
 import sys
-sys.path.append('.')
-import app.model
-print('imported app.model OK')
+
+sys.path.append(".")
+
+print("imported app.model OK")

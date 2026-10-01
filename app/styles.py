@@ -6,6 +6,7 @@ and dark-accents design theme within Streamlit web app views.
 
 import streamlit as st
 
+
 def get_svg_icon(icon_name, size=24, color="currentColor"):
     """Returns raw HTML for Lucide SVG icons to avoid using low-quality emojis as icons."""
     icons = {
@@ -25,14 +26,15 @@ def get_svg_icon(icon_name, size=24, color="currentColor"):
         "trash": f'<svg xmlns="http://www.w3.org/2000/svg" width="{size}" height="{size}" viewBox="0 0 24 24" fill="none" stroke="{color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>',
         "play": f'<svg xmlns="http://www.w3.org/2000/svg" width="{size}" height="{size}" viewBox="0 0 24 24" fill="none" stroke="{color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="6 3 20 12 6 21 6 3"/></svg>',
         "recycle": f'<svg xmlns="http://www.w3.org/2000/svg" width="{size}" height="{size}" viewBox="0 0 24 24" fill="none" stroke="{color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 11h13V4"/><path d="m16 7 4 4-4 4"/><path d="M17 13v7H4v-7"/><path d="m8 17-4-4 4-4"/><path d="M12 2v5h5"/><path d="m13 6 4 4-4 4"/></svg>',
-        "leaf": f'<svg xmlns="http://www.w3.org/2000/svg" width="{size}" height="{size}" viewBox="0 0 24 24" fill="none" stroke="{color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 3.5 1 8a7 7 0 0 1-9 10Z"/><path d="M9 22v-4h4"/></svg>'
+        "leaf": f'<svg xmlns="http://www.w3.org/2000/svg" width="{size}" height="{size}" viewBox="0 0 24 24" fill="none" stroke="{color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 3.5 1 8a7 7 0 0 1-9 10Z"/><path d="M9 22v-4h4"/></svg>',
     }
     return icons.get(icon_name, "")
+
 
 def inject_custom_css():
     """Injects custom CSS layout parameters, typography, and bento-cards definitions.
 
-    Imports Google Fonts 'Outfit' and embeds design rules directly into Streamlit's 
+    Imports Google Fonts 'Outfit' and embeds design rules directly into Streamlit's
     root HTML markup context, fully supporting Light, Dark, and Custom themes dynamically.
     """
     css = """
@@ -360,74 +362,91 @@ def inject_custom_css():
     """
     st.markdown(css, unsafe_allow_html=True)
 
+
 def render_sidebar_model_status():
     """Renders active model validation & promotion status inside the Streamlit sidebar."""
     import os
     from datetime import datetime
     from app.config import PROD_MODEL_PATH, MODEL_PATH, LEGACY_MODEL_PATH
-    
+
     st.sidebar.markdown("---")
-    st.sidebar.markdown(f"""
+    st.sidebar.markdown(
+        f"""
     <div style="padding: 10px 0 5px 0;">
         <h4 style="margin: 0; color: var(--theme-green-dark); display: flex; align-items: center; gap: 8px; font-size: 1.05rem; font-weight: 600;">
             {get_svg_icon("shield", size=18, color="var(--theme-primary)")}
             <span>Model Status</span>
         </h4>
     </div>
-    """, unsafe_allow_html=True)
-    
+    """,
+        unsafe_allow_html=True,
+    )
+
     if os.path.exists(PROD_MODEL_PATH):
         mtime = os.path.getmtime(PROD_MODEL_PATH)
-        dt = datetime.fromtimestamp(mtime).strftime('%Y-%m-%d %H:%M')
-        st.sidebar.markdown(f"""
+        dt = datetime.fromtimestamp(mtime).strftime("%Y-%m-%d %H:%M")
+        st.sidebar.markdown(
+            f"""
         <div style="background-color: color-mix(in srgb, #2E7D32 12%, var(--background-color)); border: 1px solid color-mix(in srgb, #2E7D32 25%, transparent); border-radius: 12px; padding: 12px; margin-bottom: 10px; box-shadow: var(--theme-card-shadow);">
             <div style="color: color-mix(in srgb, #2E7D32 85%, var(--text-color)); font-weight: 700; font-size: 0.8rem; letter-spacing: 0.5px;">🛡️ PRODUCTION PROMOTED</div>
             <div style="color: var(--text-color); opacity: 0.85; font-size: 0.75rem; margin-top: 4px; line-height: 1.4;">Active model met the 75% accuracy quality gate constraint.</div>
             <div style="color: var(--text-color); opacity: 0.5; font-size: 0.7rem; margin-top: 8px; font-weight: 500;">Last Promoted: {dt}</div>
         </div>
-        """, unsafe_allow_html=True)
+        """,
+            unsafe_allow_html=True,
+        )
     elif os.path.exists(MODEL_PATH):
         mtime = os.path.getmtime(MODEL_PATH)
-        dt = datetime.fromtimestamp(mtime).strftime('%Y-%m-%d %H:%M')
-        st.sidebar.markdown(f"""
+        dt = datetime.fromtimestamp(mtime).strftime("%Y-%m-%d %H:%M")
+        st.sidebar.markdown(
+            f"""
         <div style="background-color: color-mix(in srgb, #E65100 12%, var(--background-color)); border: 1px solid color-mix(in srgb, #E65100 25%, transparent); border-radius: 12px; padding: 12px; margin-bottom: 10px; box-shadow: var(--theme-card-shadow);">
             <div style="color: color-mix(in srgb, #E65100 85%, var(--text-color)); font-weight: 700; font-size: 0.8rem; letter-spacing: 0.5px;">⚠️ CHECKPOINT DRAFT</div>
             <div style="color: var(--text-color); opacity: 0.85; font-size: 0.75rem; margin-top: 4px; line-height: 1.4;">Latest training checkpoint. Quality gate not yet passed/evaluated.</div>
             <div style="color: var(--text-color); opacity: 0.5; font-size: 0.7rem; margin-top: 8px; font-weight: 500;">Saved: {dt}</div>
         </div>
-        """, unsafe_allow_html=True)
+        """,
+            unsafe_allow_html=True,
+        )
     elif os.path.exists(LEGACY_MODEL_PATH):
         mtime = os.path.getmtime(LEGACY_MODEL_PATH)
-        dt = datetime.fromtimestamp(mtime).strftime('%Y-%m-%d %H:%M')
-        st.sidebar.markdown(f"""
+        dt = datetime.fromtimestamp(mtime).strftime("%Y-%m-%d %H:%M")
+        st.sidebar.markdown(
+            f"""
         <div style="background-color: color-mix(in srgb, var(--text-color) 8%, var(--background-color)); border: 1px solid color-mix(in srgb, var(--text-color) 15%, transparent); border-radius: 12px; padding: 12px; margin-bottom: 10px; box-shadow: var(--theme-card-shadow);">
             <div style="color: color-mix(in srgb, var(--text-color) 75%, transparent); font-weight: 700; font-size: 0.8rem; letter-spacing: 0.5px;">📁 LEGACY FALLBACK</div>
             <div style="color: var(--text-color); opacity: 0.85; font-size: 0.75rem; margin-top: 4px; line-height: 1.4;">Using legacy model binary.</div>
             <div style="color: var(--text-color); opacity: 0.5; font-size: 0.7rem; margin-top: 8px; font-weight: 500;">Saved: {dt}</div>
         </div>
-        """, unsafe_allow_html=True)
+        """,
+            unsafe_allow_html=True,
+        )
     else:
-        st.sidebar.markdown("""
+        st.sidebar.markdown(
+            """
         <div style="background-color: color-mix(in srgb, #C62828 12%, var(--background-color)); border: 1px solid color-mix(in srgb, #C62828 25%, transparent); border-radius: 12px; padding: 12px; margin-bottom: 10px;">
             <div style="color: color-mix(in srgb, #C62828 85%, var(--text-color)); font-weight: 700; font-size: 0.8rem; letter-spacing: 0.5px;">❌ NO TRAINED MODEL</div>
             <div style="color: var(--text-color); opacity: 0.85; font-size: 0.75rem; margin-top: 4px; line-height: 1.4;">Active inference is falling back to untrained dummy classifier.</div>
         </div>
-        """, unsafe_allow_html=True)
+        """,
+            unsafe_allow_html=True,
+        )
+
 
 def get_latest_pipeline_summary():
     """Parses and returns the latest MLOps pipeline summary log as a dictionary."""
     import os
     import re
     from app.config import LOGS_DIR
-    
-    summary_path = os.path.join(LOGS_DIR, 'pipeline_run_summary.md')
+
+    summary_path = os.path.join(LOGS_DIR, "pipeline_run_summary.md")
     if not os.path.exists(summary_path):
         return None
-        
+
     try:
-        with open(summary_path, 'r', encoding='utf-8') as f:
+        with open(summary_path, "r", encoding="utf-8") as f:
             content = f.read()
-            
+
         date_match = re.search(r"Generated on: (.*)", content)
         duration_match = re.search(r"Duration: (.*) seconds", content)
         epochs_match = re.search(r"- Epochs: (.*)", content)
@@ -435,7 +454,7 @@ def get_latest_pipeline_summary():
         accuracy_match = re.search(r"- \*\*Test Accuracy\*\*: (.*)%", content)
         f1_match = re.search(r"- \*\*Macro F1-Score\*\*: (.*)%", content)
         promoted_match = re.search(r"- \*\*Promoted to Production\*\*: (.*)", content)
-        
+
         return {
             "date": date_match.group(1).strip() if date_match else "N/A",
             "duration": duration_match.group(1).strip() if duration_match else "N/A",
@@ -443,8 +462,9 @@ def get_latest_pipeline_summary():
             "format": format_match.group(1).strip() if format_match else "N/A",
             "accuracy": accuracy_match.group(1).strip() if accuracy_match else "N/A",
             "f1": f1_match.group(1).strip() if f1_match else "N/A",
-            "promoted": "Yes" if (promoted_match and "YES" in promoted_match.group(1)) else "No"
+            "promoted": (
+                "Yes" if (promoted_match and "YES" in promoted_match.group(1)) else "No"
+            ),
         }
     except Exception:
         return None
-

@@ -1,15 +1,18 @@
 import os
 import shutil
 
-ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-ARCHIVE_DIR = os.path.join(ROOT_DIR, 'archive')
-NESTED_DATASET_DIR = os.path.join(ARCHIVE_DIR, 'Garbage classification', 'Garbage classification')
-DATA_DIR = os.path.join(ROOT_DIR, 'data', 'garbage_classification')
+ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+ARCHIVE_DIR = os.path.join(ROOT_DIR, "archive")
+NESTED_DATASET_DIR = os.path.join(
+    ARCHIVE_DIR, "Garbage classification", "Garbage classification"
+)
+DATA_DIR = os.path.join(ROOT_DIR, "data", "garbage_classification")
 
-CLASS_NAMES = ['cardboard', 'glass', 'metal', 'paper', 'plastic', 'trash']
+CLASS_NAMES = ["cardboard", "glass", "metal", "paper", "plastic", "trash"]
+
 
 def reorganize():
-    print(f"Reorganizing dataset structure...")
+    print("Reorganizing dataset structure...")
     print(f"Root: {ROOT_DIR}")
     print(f"Nested source: {NESTED_DATASET_DIR}")
     print(f"Archive target: {ARCHIVE_DIR}")
@@ -17,13 +20,21 @@ def reorganize():
 
     # Check if nested source folder exists
     if not os.path.exists(NESTED_DATASET_DIR):
-        print(f"Nested folder not found at {NESTED_DATASET_DIR}. Checking if already reorganized...")
+        print(
+            f"Nested folder not found at {NESTED_DATASET_DIR}. Checking if already reorganized..."
+        )
         # Check if directories exist directly in archive
-        direct_exists = all(os.path.exists(os.path.join(ARCHIVE_DIR, cls)) for cls in CLASS_NAMES)
+        direct_exists = all(
+            os.path.exists(os.path.join(ARCHIVE_DIR, cls)) for cls in CLASS_NAMES
+        )
         if direct_exists:
-            print("Categories already directly in archive. Let's make sure they are in data/ as well.")
+            print(
+                "Categories already directly in archive. Let's make sure they are in data/ as well."
+            )
         else:
-            print("Error: Could not locate nested dataset or reorganized category folders.")
+            print(
+                "Error: Could not locate nested dataset or reorganized category folders."
+            )
             return False
     else:
         # Move folders from NESTED_DATASET_DIR to ARCHIVE_DIR
@@ -46,11 +57,11 @@ def reorganize():
                 print(f"Warning: Category folder {src_cls_dir} not found.")
 
         # Clean up empty source directories
-        nested_parent = os.path.join(ARCHIVE_DIR, 'Garbage classification')
+        nested_parent = os.path.join(ARCHIVE_DIR, "Garbage classification")
         try:
             print(f"Removing nested directories in {nested_parent}...")
             shutil.rmtree(nested_parent)
-            print(f"Successfully cleaned up empty nested archive directories.")
+            print("Successfully cleaned up empty nested archive directories.")
         except Exception as e:
             print(f"Error cleaning up nested directories: {e}")
 
@@ -71,7 +82,9 @@ def reorganize():
             for file_name in os.listdir(archive_cls_dir):
                 src_file = os.path.join(archive_cls_dir, file_name)
                 dst_file = os.path.join(active_cls_dir, file_name)
-                if os.path.isfile(src_file) and file_name.lower().endswith(('.jpg', '.jpeg', '.png')):
+                if os.path.isfile(src_file) and file_name.lower().endswith(
+                    (".jpg", ".jpeg", ".png")
+                ):
                     shutil.copy2(src_file, dst_file)
                     cnt += 1
             print(f"  Copied {cnt} images for '{cls}' to active dataset.")
@@ -81,5 +94,6 @@ def reorganize():
     print("\n[OK] Reorganization & Dataset integration complete!")
     return True
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     reorganize()
