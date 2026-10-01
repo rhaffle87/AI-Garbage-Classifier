@@ -46,7 +46,23 @@ def evaluate_model(test_data_path=DATA_DIR, model_path=None):
         raise ValueError("No images found for evaluation.")
 
     # Make predictions
-    y_pred = model.predict(X_test)
+    if hasattr(model, "get_input_details"):
+        # TFLite inference
+        X_test = np.float32(X_test)
+        input_details = model.get_input_details()
+        output_details = model.get_output_details()
+
+        y_pred = []
+        for i in range(len(X_test)):
+            model.set_tensor(
+                input_details[0]["index"], np.expand_dims(X_test[i], axis=0)
+            )
+            model.invoke()
+            y_pred.append(model.get_tensor(output_details[0]["index"])[0])
+        y_pred = np.array(y_pred)
+    else:
+        y_pred = model.predict(X_test)
+
     y_pred_classes = np.argmax(y_pred, axis=1)
 
     # Generate metrics

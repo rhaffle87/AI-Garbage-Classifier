@@ -18,9 +18,11 @@ from app.styles import inject_custom_css, get_svg_icon
 inject_custom_css()
 
 # Track active model path and modification time to auto-reload if the model changes
-from app.config import PROD_MODEL_PATH, MODEL_PATH, LEGACY_MODEL_PATH
+from app.config import PROD_MODEL_PATH, MODEL_PATH, LEGACY_MODEL_PATH, TFLITE_MODEL_PATH
 
-if os.path.exists(PROD_MODEL_PATH):
+if os.path.exists(TFLITE_MODEL_PATH):
+    active_path = TFLITE_MODEL_PATH
+elif os.path.exists(PROD_MODEL_PATH):
     active_path = PROD_MODEL_PATH
 elif os.path.exists(MODEL_PATH):
     active_path = MODEL_PATH

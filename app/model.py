@@ -12,21 +12,29 @@ from app.config import IMG_SIZE, NUM_CLASSES, MODEL_PATH, CLASS_NAMES
 
 
 def load_model(model_path=None):
-    """Loads a pre-trained Keras/TensorFlow classification model.
+    """Loads a pre-trained Keras/TensorFlow classification model or TFLite interpreter.
 
     If the requested model file is missing, falls back to loading a legacy
     checkpoint path, or creates and compiles a lightweight fallback architecture.
 
     Args:
-        model_path (str, optional): Target file path to .keras or .h5 file. Defaults to MODEL_PATH.
+        model_path (str, optional): Target file path to .keras, .h5, or .tflite file. Defaults to MODEL_PATH.
 
     Returns:
-        tf.keras.Model: The compiled Keras model object.
+        tf.keras.Model or tf.lite.Interpreter: The compiled model object.
     """
-    from app.config import PROD_MODEL_PATH, MODEL_PATH, LEGACY_MODEL_PATH
+    from app.config import (
+        PROD_MODEL_PATH,
+        MODEL_PATH,
+        LEGACY_MODEL_PATH,
+        TFLITE_MODEL_PATH,
+    )
+    import tensorflow as tf
 
     if model_path is None:
-        if os.path.exists(PROD_MODEL_PATH):
+        if os.path.exists(TFLITE_MODEL_PATH):
+            model_path = TFLITE_MODEL_PATH
+        elif os.path.exists(PROD_MODEL_PATH):
             model_path = PROD_MODEL_PATH
         elif os.path.exists(MODEL_PATH):
             model_path = MODEL_PATH
@@ -35,7 +43,11 @@ def load_model(model_path=None):
 
     try:
         if os.path.exists(model_path):
-            m = keras_load_model(model_path)
+            if model_path.endswith(".tflite"):
+                m = tf.lite.Interpreter(model_path=model_path)
+                m.allocate_tensors()
+            else:
+                m = keras_load_model(model_path)
         else:
             raise FileNotFoundError("Model file not found")
         m._is_fallback = False
@@ -329,9 +341,10 @@ def predict(model, image):
 
     Inspects the model input layer properties to dynamically resize the input image,
     normalizes it, feeds it to the model, and outputs the raw softmax category probabilities.
+    Supports both standard Keras models and TFLite interpreters.
 
     Args:
-        model (tf.keras.Model): Loaded classification model.
+        model (tf.keras.Model or tf.lite.Interpreter): Loaded classification model.
         image (str or np.ndarray or PIL.Image.Image): File path or image array to classify.
 
     Returns:
@@ -341,18 +354,24 @@ def predict(model, image):
 
     # Determine the model's expected input dimensions dynamically
     try:
-        if isinstance(model.input_shape, list):
-            shape = model.input_shape[0]
-        else:
-            shape = model.input_shape
-        # shape format is (None, height, width, channels)
-        h, w = shape[1], shape[2]
-        if h is None or w is None:
-            from app.config import IMG_SIZE
-
-            target_size = IMG_SIZE
-        else:
+        if hasattr(model, "get_input_details"):
+            # TFLite Interpreter
+            shape = model.get_input_details()[0]["shape"]
+            h, w = shape[1], shape[2]
             target_size = (h, w)
+        else:
+            if isinstance(model.input_shape, list):
+                shape = model.input_shape[0]
+            else:
+                shape = model.input_shape
+            # shape format is (None, height, width, channels)
+            h, w = shape[1], shape[2]
+            if h is None or w is None:
+                from app.config import IMG_SIZE
+
+                target_size = IMG_SIZE
+            else:
+                target_size = (h, w)
     except (AttributeError, IndexError, TypeError):
         from app.config import IMG_SIZE
 
@@ -368,8 +387,24 @@ def predict(model, image):
     else:
         processed = preprocess_image(image, target_size=target_size)
 
+    import numpy as np
+
     input_batch = np.expand_dims(processed, axis=0)
-    preds = model.predict(input_batch)
+
+    if hasattr(model, "get_input_details"):
+        # TFLite inference
+        # Convert to float32
+        input_batch = np.float32(input_batch)
+        input_details = model.get_input_details()
+        output_details = model.get_output_details()
+
+        model.set_tensor(input_details[0]["index"], input_batch)
+        model.invoke()
+        preds = model.get_tensor(output_details[0]["index"])
+    else:
+        # Standard Keras inference
+        preds = model.predict(input_batch)
+
     return preds.tolist()[0]
 
 

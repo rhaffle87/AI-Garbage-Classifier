@@ -35,3 +35,6 @@ PROD_MODEL_PATH = os.path.join(
 LEGACY_MODEL_PATH = os.path.join(
     MODELS_DIR, "garbage_model.h5"
 )  # Legacy format fallback
+TFLITE_MODEL_PATH = os.path.join(
+    MODELS_DIR, "garbage_model.tflite"
+)  # Optimized TFLite format

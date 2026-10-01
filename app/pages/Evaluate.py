@@ -37,9 +37,11 @@ st.markdown(
 )
 
 # Track active model path and modification time to auto-reload if the model changes
-from app.config import PROD_MODEL_PATH, MODEL_PATH, LEGACY_MODEL_PATH
+from app.config import PROD_MODEL_PATH, MODEL_PATH, LEGACY_MODEL_PATH, TFLITE_MODEL_PATH
 
-if os.path.exists(PROD_MODEL_PATH):
+if os.path.exists(TFLITE_MODEL_PATH):
+    active_path = TFLITE_MODEL_PATH
+elif os.path.exists(PROD_MODEL_PATH):
     active_path = PROD_MODEL_PATH
 elif os.path.exists(MODEL_PATH):
     active_path = MODEL_PATH
@@ -79,7 +81,12 @@ status_color = "var(--text-color)"
 status_bg = "color-mix(in srgb, var(--text-color) 8%, var(--background-color))"
 status_border = "color-mix(in srgb, var(--text-color) 15%, transparent)"
 
-if active_path == PROD_MODEL_PATH:
+if active_path == TFLITE_MODEL_PATH:
+    model_type = "⚡ TENSORFLOW LITE (Optimized Inference)"
+    status_color = "color-mix(in srgb, #0288D1 85%, var(--text-color))"
+    status_bg = "color-mix(in srgb, #0288D1 12%, var(--background-color))"
+    status_border = "color-mix(in srgb, #0288D1 25%, transparent)"
+elif active_path == PROD_MODEL_PATH:
     model_type = "🛡️ PRODUCTION PROMOTED (Passed Quality Gate)"
     status_color = "color-mix(in srgb, #2E7D32 85%, var(--text-color))"
     status_bg = "color-mix(in srgb, #2E7D32 12%, var(--background-color))"
