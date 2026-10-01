@@ -19,6 +19,7 @@ inject_custom_css()
 
 # Track active model path and modification time to auto-reload if the model changes
 from app.config import PROD_MODEL_PATH, MODEL_PATH, LEGACY_MODEL_PATH
+
 if os.path.exists(PROD_MODEL_PATH):
     active_path = PROD_MODEL_PATH
 elif os.path.exists(MODEL_PATH):
@@ -27,17 +28,22 @@ else:
     active_path = LEGACY_MODEL_PATH
 mtime = os.path.getmtime(active_path) if os.path.exists(active_path) else 0.0
 
+
 @st.cache_resource
 def get_cached_model(path, last_modified):
     return load_model(path)
 
+
 model = get_cached_model(active_path, mtime)
-if getattr(model, '_is_fallback', False):
-    st.warning("No valid saved model found — using a small fallback model. For meaningful results, train and save a model first on the Train page.")
+if getattr(model, "_is_fallback", False):
+    st.warning(
+        "No valid saved model found — using a small fallback model. For meaningful results, train and save a model first on the Train page."
+    )
 
 
 # Page Header
-st.markdown(f"""
+st.markdown(
+    f"""
 <div class="header-banner">
     <div style="display: flex; justify-content: center; align-items: center; gap: 16px; margin-bottom: 0.8rem;">
         {get_svg_icon("camera", size=48, color="#FFFFFF")}
@@ -45,53 +51,67 @@ st.markdown(f"""
     </div>
     <p>Upload a photo or capture a snapshot to identify waste and learn how to recycle it properly.</p>
 </div>
-""", unsafe_allow_html=True)
+""",
+    unsafe_allow_html=True,
+)
 
 # Recycling tips dictionary
 RECYCLING_TIPS = {
-    'cardboard': "📦 **Cardboard**: Remove packaging tape, flatten the box completely to save space, and make sure it remains clean and dry. Wet or greasy cardboard cannot be recycled and should go in the compost or trash.",
-    'glass': "🍶 **Glass**: Rinse thoroughly to remove food or drink residue. Labels and adhesive can usually stay, but metal/plastic lids should be removed and recycled separately.",
-    'metal': "🥫 **Metal**: Rinse aluminum/tin cans to prevent pests. You can crush cans to save space. Clean foil can also be recycled; squeeze it into a tight ball before throwing it in the bin.",
-    'paper': "📝 **Paper**: Keep paper dry. Office paper, newspapers, letters, and books are highly recyclable. Avoid recycling soiled paper, paper towels, tissues, or paper contaminated with food.",
-    'plastic': "🥤 **Plastic**: Empty and rinse containers. Squeeze the bottle to remove air and replace the cap. Check local guidelines to see which plastic numbers (e.g., #1 PETE, #2 HDPE) are accepted.",
-    'trash': "🗑️ **Trash**: This item cannot be recycled with the current sorted streams. Please place it in the general waste bin. Consider composting if it is organic waste."
+    "cardboard": "📦 **Cardboard**: Remove packaging tape, flatten the box completely to save space, and make sure it remains clean and dry. Wet or greasy cardboard cannot be recycled and should go in the compost or trash.",
+    "glass": "🍶 **Glass**: Rinse thoroughly to remove food or drink residue. Labels and adhesive can usually stay, but metal/plastic lids should be removed and recycled separately.",
+    "metal": "🥫 **Metal**: Rinse aluminum/tin cans to prevent pests. You can crush cans to save space. Clean foil can also be recycled; squeeze it into a tight ball before throwing it in the bin.",
+    "paper": "📝 **Paper**: Keep paper dry. Office paper, newspapers, letters, and books are highly recyclable. Avoid recycling soiled paper, paper towels, tissues, or paper contaminated with food.",
+    "plastic": "🥤 **Plastic**: Empty and rinse containers. Squeeze the bottle to remove air and replace the cap. Check local guidelines to see which plastic numbers (e.g., #1 PETE, #2 HDPE) are accepted.",
+    "trash": "🗑️ **Trash**: This item cannot be recycled with the current sorted streams. Please place it in the general waste bin. Consider composting if it is organic waste.",
 }
+
 
 def display_predictions(probs, image_obj, threshold=0.70):
     col1, col2 = st.columns([1.1, 1])
-    
+
     with col1:
-        st.markdown(f"""
+        st.markdown(
+            f"""
         <div style="display: flex; align-items: center; gap: 8px; margin-top: 1rem; margin-bottom: 1rem;">
             {get_svg_icon("camera", size=22, color="var(--theme-primary)")}
             <h4 style="margin: 0; color: var(--theme-green-dark);">Analyzed Visual</h4>
         </div>
-        """, unsafe_allow_html=True)
+        """,
+            unsafe_allow_html=True,
+        )
         if isinstance(image_obj, Image.Image):
             st.image(image_obj, use_column_width=True)
         else:
             st.image(image_obj, channels="RGB", use_column_width=True)
-            
+
     with col2:
-        st.markdown(f"""
+        st.markdown(
+            f"""
         <div style="display: flex; align-items: center; gap: 8px; margin-top: 1rem; margin-bottom: 1rem;">
             {get_svg_icon("chart", size=22, color="var(--theme-primary)")}
             <h4 style="margin: 0; color: var(--theme-green-dark);">Classification Output</h4>
         </div>
-        """, unsafe_allow_html=True)
+        """,
+            unsafe_allow_html=True,
+        )
         top_indices = np.argsort(probs)[::-1]
         top_class = CLASS_NAMES[top_indices[0]]
         max_prob = probs[top_indices[0]]
-        
+
         # Render a premium styled card for results
         if max_prob < threshold:
             badge_html = f'<span class="confidence-badge badge-low">Low Confidence ({max_prob*100:.1f}%)</span>'
-            status_alert = st.warning(f"The model is unsure, but it's likely **{top_class.title()}**.")
+            status_alert = st.warning(
+                f"The model is unsure, but it's likely **{top_class.title()}**."
+            )
         else:
             badge_html = f'<span class="confidence-badge badge-high">High Confidence ({max_prob*100:.1f}%)</span>'
-            status_alert = st.success(f"Successfully identified as **{top_class.title()}**!")
+            status_alert = st.success(
+                f"Successfully identified as **{top_class.title()}**!"
+            )
 
-        st.markdown(f"""
+        st.markdown(
+            f"""
         <div class="premium-card">
             {badge_html}
             <h3 style="margin: 0.5rem 0 1rem 0; color: var(--theme-green-dark);">{top_class.title()}</h3>
@@ -99,22 +119,26 @@ def display_predictions(probs, image_obj, threshold=0.70):
                 {RECYCLING_TIPS.get(top_class, "Follow general recycling instructions.")}
             </p>
         </div>
-        """, unsafe_allow_html=True)
-        
+        """,
+            unsafe_allow_html=True,
+        )
+
         st.write("**Top Predictions Probability Distribution:**")
         for i, idx in enumerate(top_indices[:3]):
             class_name = CLASS_NAMES[idx].title()
             prob = float(probs[idx])
-            
+
             col_lbl, col_bar = st.columns([1, 2])
             with col_lbl:
                 st.write(f"**{class_name}** ({prob*100:.1f}%)")
             with col_bar:
                 st.progress(prob)
 
+
 # Sidebar controls for dynamic inference thresholds
 with st.sidebar:
-    st.markdown(f"""
+    st.markdown(
+        f"""
     <div style="padding: 10px 0;">
         <h4 style="margin: 0; color: var(--theme-green-dark); display: flex; align-items: center; gap: 8px;">
             {get_svg_icon("settings", size=20, color="var(--theme-primary)")}
@@ -122,55 +146,76 @@ with st.sidebar:
         </h4>
         <p style="color: var(--theme-text-muted); font-size: 0.85rem; margin-top: 5px;">Fine-tune prediction sensitivity and filter out low-confidence hallucinations.</p>
     </div>
-    """, unsafe_allow_html=True)
+    """,
+        unsafe_allow_html=True,
+    )
     confidence_threshold = st.slider(
         "Confidence Threshold",
         min_value=0.40,
         max_value=0.95,
         value=0.70,
         step=0.05,
-        help="Predictions below this confidence level will be marked as 'Unsure' to prevent false positive classifications on background items."
+        help="Predictions below this confidence level will be marked as 'Unsure' to prevent false positive classifications on background items.",
     )
 
-st.markdown(f"""
+st.markdown(
+    f"""
 <div class="flex-header">
     {get_svg_icon("play", size=28, color="var(--theme-primary)")}
     <h3 style="color: var(--theme-green-dark); font-weight: 600;">Choose Input Source</h3>
 </div>
-""", unsafe_allow_html=True)
+""",
+    unsafe_allow_html=True,
+)
 
-tab1, tab2, tab3 = st.tabs(["Upload Image File", "Webcam Snapshot", "Live Camera Stream"])
+tab1, tab2, tab3 = st.tabs(
+    ["Upload Image File", "Webcam Snapshot", "Live Camera Stream"]
+)
 
 with tab1:
-    st.markdown("""
+    st.markdown(
+        """
     <div style="padding: 1rem 0;">
         <p style="color: var(--theme-text-muted); font-size: 0.95rem;">Upload a JPEG or PNG photograph from your local storage.</p>
     </div>
-    """, unsafe_allow_html=True)
-    uploaded_file = st.file_uploader("Choose an image file...", type=["jpg", "jpeg", "png"], label_visibility="collapsed")
+    """,
+        unsafe_allow_html=True,
+    )
+    uploaded_file = st.file_uploader(
+        "Choose an image file...",
+        type=["jpg", "jpeg", "png"],
+        label_visibility="collapsed",
+    )
     if uploaded_file is not None:
         try:
             with st.spinner("Processing image via neural network..."):
                 image = Image.open(uploaded_file)
-                image.load() # Fully load image data to catch corruptions immediately
+                image.load()  # Fully load image data to catch corruptions immediately
                 probs = predict(model, image)
                 st.divider()
                 display_predictions(probs, image, threshold=confidence_threshold)
         except Exception as e:
-            st.error(f"❌ Could not process uploaded image. The file may be corrupted, truncated, or in an unsupported format. Error detail: {str(e)}")
+            st.error(
+                f"❌ Could not process uploaded image. The file may be corrupted, truncated, or in an unsupported format. Error detail: {str(e)}"
+            )
 
 with tab2:
-    st.markdown("""
+    st.markdown(
+        """
     <div style="padding: 1rem 0;">
         <p style="color: #666; font-size: 0.95rem;">Capture a single photo using your integrated laptop camera or webcam.</p>
     </div>
-    """, unsafe_allow_html=True)
+    """,
+        unsafe_allow_html=True,
+    )
     if st.button("Capture Webcam Photo", use_container_width=True, type="primary"):
         with st.spinner("Activating camera..."):
             try:
                 cap = cv2.VideoCapture(0)
                 if not cap.isOpened():
-                    st.error("❌ Could not access the webcam. Check camera permissions or ensure no other app is using the camera.")
+                    st.error(
+                        "❌ Could not access the webcam. Check camera permissions or ensure no other app is using the camera."
+                    )
                 else:
                     ret, frame = cap.read()
                     cap.release()
@@ -180,20 +225,25 @@ with tab2:
                         frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
                         probs = predict(model, frame_rgb)
                         st.divider()
-                        display_predictions(probs, frame_rgb, threshold=confidence_threshold)
+                        display_predictions(
+                            probs, frame_rgb, threshold=confidence_threshold
+                        )
             except Exception as ce:
                 st.error(f"❌ Camera access error: {str(ce)}")
 
 with tab3:
-    st.markdown("""
+    st.markdown(
+        """
     <div style="padding: 1rem 0;">
         <p style="color: #666; font-size: 0.95rem;">Enable real-time continuous classification directly inside your browser window.</p>
     </div>
-    """, unsafe_allow_html=True)
+    """,
+        unsafe_allow_html=True,
+    )
     try:
         from streamlit_webrtc import webrtc_streamer, VideoTransformerBase
         import threading
-        
+
         class GarbageTransformer(VideoTransformerBase):
             def __init__(self):
                 super().__init__()
@@ -206,6 +256,7 @@ with tab3:
 
             def _async_predict(self, rgb_copy):
                 from app.model import predict
+
                 try:
                     preds = predict(self.model, rgb_copy)
                     with self.lock:
@@ -223,12 +274,12 @@ with tab3:
 
                 img = frame.to_ndarray(format="bgr24")
                 img_h, img_w = img.shape[:2]
-                
+
                 # Retrieve the latest predictions and busy status under thread lock
                 with self.lock:
                     preds = self.last_preds
                     is_busy = self.is_predicting
-                
+
                 # If the prediction thread is free, spawn a background task on the current frame
                 if not is_busy:
                     # Convert to RGB and copy image to prevent race conditions on the array buffer
@@ -238,38 +289,40 @@ with tab3:
                     t = threading.Thread(target=self._async_predict, args=(rgb_copy,))
                     t.daemon = True
                     t.start()
-                
+
                 # Process classification label and border colors based on last predictions
                 if preds is not None:
                     top_idx = int(np.argmax(preds))
                     confidence = float(preds[top_idx])
                     if confidence < self.threshold:
                         label = f"Unsure ({confidence*100:.1f}%)"
-                        color = (0, 165, 255) # Orange in BGR
+                        color = (0, 165, 255)  # Orange in BGR
                     else:
                         label = f"{self.class_names[top_idx].title()}: {confidence*100:.1f}%"
-                        color = (0, 255, 0) # Green in BGR
+                        color = (0, 255, 0)  # Green in BGR
                 else:
                     label = "Scanning..."
-                    color = (255, 255, 255) # White in BGR
+                    color = (255, 255, 255)  # White in BGR
                     confidence = 0.0
 
                 # Preprocess image to detect foreground objects (contours)
                 gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
                 blurred = cv2.GaussianBlur(gray, (7, 7), 0)
                 edged = cv2.Canny(blurred, 30, 130)
-                
+
                 # Dilate to bridge gaps
                 kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (5, 5))
                 dilated = cv2.dilate(edged, kernel, iterations=1)
-                
+
                 # Find external contours
-                contours, _ = cv2.findContours(dilated, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-                
+                contours, _ = cv2.findContours(
+                    dilated, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
+                )
+
                 largest_contour = None
                 max_area = 0
                 total_area = img_h * img_w
-                
+
                 for c in contours:
                     area = cv2.contourArea(c)
                     # Filter out noise and contours spanning the entire screen
@@ -281,10 +334,10 @@ with tab3:
                 if largest_contour is not None:
                     # Found foreground object: draw dynamic bounding box
                     x, y, w, h = cv2.boundingRect(largest_contour)
-                    
+
                     # Main box outline
                     cv2.rectangle(img, (x, y), (x + w, y + h), color, 2, cv2.LINE_AA)
-                    
+
                     # Futuristic corner scanner brackets
                     accent_len = min(20, w // 4, h // 4)
                     # Top-Left corner
@@ -302,47 +355,121 @@ with tab3:
 
                     # Dynamic label overlay
                     text_y = y - 10 if y - 10 > 25 else y + 25
-                    (tw, th), _ = cv2.getTextSize(label, cv2.FONT_HERSHEY_SIMPLEX, 0.6, 2)
-                    cv2.rectangle(img, (x, text_y - th - 6), (x + tw + 10, text_y + 4), color, -1)
+                    (tw, th), _ = cv2.getTextSize(
+                        label, cv2.FONT_HERSHEY_SIMPLEX, 0.6, 2
+                    )
+                    cv2.rectangle(
+                        img, (x, text_y - th - 6), (x + tw + 10, text_y + 4), color, -1
+                    )
                     text_color = (0, 0, 0) if color == (0, 255, 0) else (255, 255, 255)
-                    cv2.putText(img, label, (x + 5, text_y - 2), cv2.FONT_HERSHEY_SIMPLEX, 0.6, text_color, 2, cv2.LINE_AA)
+                    cv2.putText(
+                        img,
+                        label,
+                        (x + 5, text_y - 2),
+                        cv2.FONT_HERSHEY_SIMPLEX,
+                        0.6,
+                        text_color,
+                        2,
+                        cv2.LINE_AA,
+                    )
                 else:
                     # Fallback targeting UI in the center
                     box_w, box_h = int(img_w * 0.5), int(img_h * 0.6)
                     x = (img_w - box_w) // 2
                     y = (img_h - box_h) // 2
-                    
+
                     # Target center box
-                    cv2.rectangle(img, (x, y), (x + box_w, y + box_h), (200, 200, 200), 1, cv2.LINE_AA)
-                    
+                    cv2.rectangle(
+                        img,
+                        (x, y),
+                        (x + box_w, y + box_h),
+                        (200, 200, 200),
+                        1,
+                        cv2.LINE_AA,
+                    )
+
                     # Target corner accents (white)
                     accent_len = 15
                     # Top-Left
                     cv2.line(img, (x, y), (x + accent_len, y), (255, 255, 255), 3)
                     cv2.line(img, (x, y), (x, y + accent_len), (255, 255, 255), 3)
                     # Top-Right
-                    cv2.line(img, (x + box_w, y), (x + box_w - accent_len, y), (255, 255, 255), 3)
-                    cv2.line(img, (x + box_w, y), (x + box_w, y + accent_len), (255, 255, 255), 3)
+                    cv2.line(
+                        img,
+                        (x + box_w, y),
+                        (x + box_w - accent_len, y),
+                        (255, 255, 255),
+                        3,
+                    )
+                    cv2.line(
+                        img,
+                        (x + box_w, y),
+                        (x + box_w, y + accent_len),
+                        (255, 255, 255),
+                        3,
+                    )
                     # Bottom-Left
-                    cv2.line(img, (x, y + box_h), (x + accent_len, y + box_h), (255, 255, 255), 3)
-                    cv2.line(img, (x, y + box_h), (x, y + box_h - accent_len), (255, 255, 255), 3)
+                    cv2.line(
+                        img,
+                        (x, y + box_h),
+                        (x + accent_len, y + box_h),
+                        (255, 255, 255),
+                        3,
+                    )
+                    cv2.line(
+                        img,
+                        (x, y + box_h),
+                        (x, y + box_h - accent_len),
+                        (255, 255, 255),
+                        3,
+                    )
                     # Bottom-Right
-                    cv2.line(img, (x + box_w, y + box_h), (x + box_w - accent_len, y + box_h), (255, 255, 255), 3)
-                    cv2.line(img, (x + box_w, y + box_h), (x + box_w, y + box_h - accent_len), (255, 255, 255), 3)
+                    cv2.line(
+                        img,
+                        (x + box_w, y + box_h),
+                        (x + box_w - accent_len, y + box_h),
+                        (255, 255, 255),
+                        3,
+                    )
+                    cv2.line(
+                        img,
+                        (x + box_w, y + box_h),
+                        (x + box_w, y + box_h - accent_len),
+                        (255, 255, 255),
+                        3,
+                    )
 
                     # Show prediction labeled as scanning center
                     text_y = y - 10 if y - 10 > 25 else y + 25
                     label_target = f"Scanning Center: {label}"
-                    (tw, th), _ = cv2.getTextSize(label_target, cv2.FONT_HERSHEY_SIMPLEX, 0.6, 2)
-                    cv2.rectangle(img, (x, text_y - th - 6), (x + tw + 10, text_y + 4), color, -1)
+                    (tw, th), _ = cv2.getTextSize(
+                        label_target, cv2.FONT_HERSHEY_SIMPLEX, 0.6, 2
+                    )
+                    cv2.rectangle(
+                        img, (x, text_y - th - 6), (x + tw + 10, text_y + 4), color, -1
+                    )
                     text_color = (0, 0, 0) if color == (0, 255, 0) else (255, 255, 255)
-                    cv2.putText(img, label_target, (x + 5, text_y - 2), cv2.FONT_HERSHEY_SIMPLEX, 0.6, text_color, 2, cv2.LINE_AA)
+                    cv2.putText(
+                        img,
+                        label_target,
+                        (x + 5, text_y - 2),
+                        cv2.FONT_HERSHEY_SIMPLEX,
+                        0.6,
+                        text_color,
+                        2,
+                        cv2.LINE_AA,
+                    )
 
                 return av.VideoFrame.from_ndarray(img, format="bgr24")
 
-        ctx = webrtc_streamer(key="garbage-webrtc", video_transformer_factory=GarbageTransformer,
-                              media_stream_constraints={"video": True, "audio": False})
+        ctx = webrtc_streamer(
+            key="garbage-webrtc",
+            video_transformer_factory=GarbageTransformer,
+            media_stream_constraints={"video": True, "audio": False},
+        )
         if ctx.video_transformer is not None:
             ctx.video_transformer.threshold = confidence_threshold
     except Exception:
-        st.error("`streamlit-webrtc` is not fully configured or installed. Please verify installation packages.")
+        st.error(
+            "`streamlit-webrtc` is not fully configured or installed. Please verify installation packages."
+        )

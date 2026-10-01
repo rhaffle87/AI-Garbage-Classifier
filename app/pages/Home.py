@@ -1,14 +1,14 @@
 """Home Dashboard Page.
 
-Implements the application landing page with hero banners, feature grids, 
-interactive educational guides, and the dynamic carbon/energy recycling impact 
+Implements the application landing page with hero banners, feature grids,
+interactive educational guides, and the dynamic carbon/energy recycling impact
 calculator.
 """
 
 import sys
 import os
 
-ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 if ROOT not in sys.path:
     sys.path.insert(0, ROOT)
 
@@ -19,29 +19,38 @@ from app.styles import get_svg_icon, inject_custom_css, get_latest_pipeline_summ
 inject_custom_css()
 
 # Hero Section
-st.markdown(f"""
-<div class="header-banner">
+st.markdown(
+    f"""
+<div class="header-banner" style="background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%) !important; padding: 3rem 2rem; border-radius: 20px; text-align: center; margin-bottom: 2.5rem; box-shadow: 0 12px 35px rgba(30, 60, 114, 0.2) !important;">
     <div style="display: flex; justify-content: center; align-items: center; gap: 16px; margin-bottom: 0.8rem;">
         {get_svg_icon("recycle", size=48, color="#FFFFFF")}
-        <h1 style="margin: 0 !important; color: white !important;">AI Garbage Classifier</h1>
+        <h1 style="margin: 0 !important; color: white !important; font-size: 3.2rem !important; letter-spacing: -0.5px;">AI Garbage Classifier</h1>
     </div>
-    <p>A smart, modern way to identify and sort your waste using deep learning and neural network image classification.</p>
+    <p style="font-size: 1.2rem !important; color: rgba(255, 255, 255, 0.95) !important; max-width: 750px; margin: 0 auto !important; font-weight: 400 !important; line-height: 1.6;">
+        A smart, modern way to identify and sort your waste using deep learning and neural network image classification. Make an impact on the environment through proper recycling practices.
+    </p>
 </div>
-""", unsafe_allow_html=True)
+""",
+    unsafe_allow_html=True,
+)
 
 
 # Core Features Grid (using premium cards)
-st.markdown(f"""
+st.markdown(
+    f"""
 <div class="flex-header">
     {get_svg_icon("leaf", size=28, color="var(--theme-primary)")}
     <h3 style="color: var(--theme-green-dark); font-weight: 600;">Core Capabilities</h3>
 </div>
-""", unsafe_allow_html=True)
+""",
+    unsafe_allow_html=True,
+)
 
 col1, col2, col3 = st.columns(3)
 
 with col1:
-    st.markdown(f"""
+    st.markdown(
+        f"""
     <div class="premium-card">
         <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 0.5rem;">
             {get_svg_icon("camera", size=22, color="var(--theme-primary)")}
@@ -51,10 +60,13 @@ with col1:
             Upload an image, take a webcam snapshot, or stream live video to instantly classify waste into 6 categories with confidence scores.
         </p>
     </div>
-    """, unsafe_allow_html=True)
+    """,
+        unsafe_allow_html=True,
+    )
 
 with col2:
-    st.markdown(f"""
+    st.markdown(
+        f"""
     <div class="premium-card">
         <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 0.5rem;">
             {get_svg_icon("cpu", size=22, color="var(--theme-primary)")}
@@ -64,10 +76,13 @@ with col2:
             Leverages a custom MobileNetV2 architecture pretrained on ImageNet. Quick training pipeline customizable for your datasets.
         </p>
     </div>
-    """, unsafe_allow_html=True)
+    """,
+        unsafe_allow_html=True,
+    )
 
 with col3:
-    st.markdown(f"""
+    st.markdown(
+        f"""
     <div class="premium-card">
         <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 0.5rem;">
             {get_svg_icon("chart", size=22, color="var(--theme-primary)")}
@@ -77,27 +92,49 @@ with col3:
             Track validation accuracy, classification reports, precision, recall, and visualize results using interactive Confusion Matrices.
         </p>
     </div>
-    """, unsafe_allow_html=True)
+    """,
+        unsafe_allow_html=True,
+    )
 
 # MLOps Pipeline Status Section
 summary = get_latest_pipeline_summary()
 if summary:
     st.divider()
-    st.markdown(f"""
+    st.markdown(
+        f"""
     <div class="flex-header">
         {get_svg_icon("cpu", size=28, color="var(--theme-primary)")}
         <h3 style="color: var(--theme-green-dark); font-weight: 600;">Latest MLOps Pipeline Status</h3>
     </div>
-    """, unsafe_allow_html=True)
-    
-    status_color = "color-mix(in srgb, #2E7D32 85%, var(--text-color))" if summary["promoted"] == "Yes" else "color-mix(in srgb, #C62828 85%, var(--text-color))"
-    status_bg = "color-mix(in srgb, #2E7D32 12%, var(--background-color))" if summary["promoted"] == "Yes" else "color-mix(in srgb, #C62828 12%, var(--background-color))"
-    status_border = "color-mix(in srgb, #2E7D32 25%, transparent)" if summary["promoted"] == "Yes" else "color-mix(in srgb, #C62828 25%, transparent)"
-    status_text = "🛡️ PASSED & PROMOTED TO PRODUCTION" if summary["promoted"] == "Yes" else "❌ REJECTED BY QUALITY GATE (Draft Checkpoint)"
-    
+    """,
+        unsafe_allow_html=True,
+    )
+
+    status_color = (
+        "color-mix(in srgb, #2E7D32 85%, var(--text-color))"
+        if summary["promoted"] == "Yes"
+        else "color-mix(in srgb, #C62828 85%, var(--text-color))"
+    )
+    status_bg = (
+        "color-mix(in srgb, #2E7D32 12%, var(--background-color))"
+        if summary["promoted"] == "Yes"
+        else "color-mix(in srgb, #C62828 12%, var(--background-color))"
+    )
+    status_border = (
+        "color-mix(in srgb, #2E7D32 25%, transparent)"
+        if summary["promoted"] == "Yes"
+        else "color-mix(in srgb, #C62828 25%, transparent)"
+    )
+    status_text = (
+        "🛡️ PASSED & PROMOTED TO PRODUCTION"
+        if summary["promoted"] == "Yes"
+        else "❌ REJECTED BY QUALITY GATE (Draft Checkpoint)"
+    )
+
     col_p1, col_p2 = st.columns([1, 1])
     with col_p1:
-        st.markdown(f"""
+        st.markdown(
+            f"""
         <div class="premium-card" style="height: 100%;">
             <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 0.8rem;">
                 {get_svg_icon("settings", size=20, color="var(--theme-primary)")}
@@ -122,10 +159,13 @@ if summary:
                 </tr>
             </table>
         </div>
-        """, unsafe_allow_html=True)
-        
+        """,
+            unsafe_allow_html=True,
+        )
+
     with col_p2:
-        st.markdown(f"""
+        st.markdown(
+            f"""
         <div class="premium-card" style="height: 100%;">
             <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 0.8rem;">
                 {get_svg_icon("chart", size=20, color="var(--theme-primary)")}
@@ -146,38 +186,74 @@ if summary:
                 <div style="color: {status_color}; font-weight: 700; font-size: 0.8rem; letter-spacing: 0.2px;">{status_text}</div>
             </div>
         </div>
-        """, unsafe_allow_html=True)
+        """,
+            unsafe_allow_html=True,
+        )
 
 # Interactive Section: Recycling Impact Calculator
 st.divider()
-st.markdown(f"""
+st.markdown(
+    f"""
 <div class="flex-header">
     {get_svg_icon("recycle", size=28, color="var(--theme-primary)")}
     <h3 style="color: var(--theme-green-dark); font-weight: 600;">Recycling Impact Calculator</h3>
 </div>
-""", unsafe_allow_html=True)
-st.markdown("Select or enter the items you are planning to recycle to see the estimated positive impact on our planet!")
+""",
+    unsafe_allow_html=True,
+)
+st.markdown(
+    "Select or enter the items you are planning to recycle to see the estimated positive impact on our planet!"
+)
 
 calc_col1, calc_col2 = st.columns([1, 1])
 
 with calc_col1:
     st.markdown("#### Input Recyclables")
-    cardboard_qty = st.number_input("Cardboard boxes", min_value=0, max_value=1000, value=2, step=1)
-    glass_qty = st.number_input("Glass bottles/jars", min_value=0, max_value=1000, value=5, step=1)
-    metal_qty = st.number_input("Metal/Aluminum cans", min_value=0, max_value=1000, value=8, step=1)
-    paper_qty = st.number_input("Paper sheets", min_value=0, max_value=5000, value=25, step=5)
-    plastic_qty = st.number_input("Plastic bottles/containers", min_value=0, max_value=1000, value=12, step=1)
+    cardboard_qty = st.number_input(
+        "Cardboard boxes", min_value=0, max_value=1000, value=2, step=1
+    )
+    glass_qty = st.number_input(
+        "Glass bottles/jars", min_value=0, max_value=1000, value=5, step=1
+    )
+    metal_qty = st.number_input(
+        "Metal/Aluminum cans", min_value=0, max_value=1000, value=8, step=1
+    )
+    paper_qty = st.number_input(
+        "Paper sheets", min_value=0, max_value=5000, value=25, step=5
+    )
+    plastic_qty = st.number_input(
+        "Plastic bottles/containers", min_value=0, max_value=1000, value=12, step=1
+    )
 
 with calc_col2:
     st.markdown("#### Environmental Savings Output")
-    
+
     # Calculation formulas based on EPA standard averages
-    co2_saved = (cardboard_qty * 0.22) + (glass_qty * 0.12) + (metal_qty * 0.18) + (paper_qty * 0.015) + (plastic_qty * 0.08)
-    energy_saved = (cardboard_qty * 0.5) + (glass_qty * 0.3) + (metal_qty * 0.8) + (paper_qty * 0.05) + (plastic_qty * 0.4)
-    landfill_saved = (cardboard_qty * 3.5) + (glass_qty * 0.8) + (metal_qty * 0.4) + (paper_qty * 0.05) + (plastic_qty * 1.5)
-    
+    co2_saved = (
+        (cardboard_qty * 0.22)
+        + (glass_qty * 0.12)
+        + (metal_qty * 0.18)
+        + (paper_qty * 0.015)
+        + (plastic_qty * 0.08)
+    )
+    energy_saved = (
+        (cardboard_qty * 0.5)
+        + (glass_qty * 0.3)
+        + (metal_qty * 0.8)
+        + (paper_qty * 0.05)
+        + (plastic_qty * 0.4)
+    )
+    landfill_saved = (
+        (cardboard_qty * 3.5)
+        + (glass_qty * 0.8)
+        + (metal_qty * 0.4)
+        + (paper_qty * 0.05)
+        + (plastic_qty * 1.5)
+    )
+
     # Display savings as custom cards
-    st.markdown(f"""
+    st.markdown(
+        f"""
     <div class="metric-card" style="margin-bottom: 1rem;">
         <div class="metric-label">💨 Carbon Footprint Reduced</div>
         <div class="metric-value">{co2_saved:.2f} kg</div>
@@ -193,16 +269,21 @@ with calc_col2:
         <div class="metric-value">{landfill_saved:.1f} Liters</div>
         <div style="font-size: 0.85rem; color: var(--theme-text-muted);">Volume of waste kept out of municipal landfills</div>
     </div>
-    """, unsafe_allow_html=True)
+    """,
+        unsafe_allow_html=True,
+    )
 
 # Educational Guide Section
 st.divider()
-st.markdown(f"""
+st.markdown(
+    f"""
 <div class="flex-header">
     {get_svg_icon("info", size=28, color="var(--theme-primary)")}
     <h3 style="color: var(--theme-green-dark); font-weight: 600;">Waste Sorting Quick Reference</h3>
 </div>
-""", unsafe_allow_html=True)
+""",
+    unsafe_allow_html=True,
+)
 with st.expander("Learn about the 6 waste categories classified by this AI"):
     st.markdown("""
     - **📦 Cardboard**: Boxes, packaging materials, shipping boxes, thick paperboard. *Tip: Keep dry and flatten.*
@@ -214,10 +295,15 @@ with st.expander("Learn about the 6 waste categories classified by this AI"):
     """)
 
 st.divider()
-st.info("👈 **Use the sidebar** to navigate between pages. Start by checking out the **Predict** page to see it in action!")
+st.info(
+    "👈 **Use the sidebar** to navigate between pages. Start by checking out the **Predict** page to see it in action!"
+)
 
-st.markdown("""
+st.markdown(
+    """
 <div style='text-align: center; margin-top: 3rem; color: var(--theme-text-muted);'>
     <small>Built with ❤️ using Streamlit, TensorFlow & MobileNetV2</small>
 </div>
-""", unsafe_allow_html=True)
+""",
+    unsafe_allow_html=True,
+)

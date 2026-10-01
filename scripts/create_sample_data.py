@@ -1,12 +1,13 @@
 """Create a tiny sample dataset for the garbage classifier.
 Creates 3 simple synthetic images per class under data/garbage_classification.
 """
-from PIL import Image, ImageDraw, ImageFont
+
+from PIL import Image, ImageDraw
 import os
 
-CLASS_NAMES = ['cardboard','glass','metal','paper','plastic','trash']
-ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-DATA_DIR = os.path.join(ROOT, 'data', 'garbage_classification')
+CLASS_NAMES = ["cardboard", "glass", "metal", "paper", "plastic", "trash"]
+ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+DATA_DIR = os.path.join(ROOT, "data", "garbage_classification")
 
 os.makedirs(DATA_DIR, exist_ok=True)
 
@@ -17,20 +18,26 @@ for cls in CLASS_NAMES:
     # placeholder), rename it safely before creating the directory so we don't
     # raise on Windows when trying to make the directory.
     if os.path.exists(cls_dir) and os.path.isfile(cls_dir):
-        new_name = cls_dir + '.txt'
-        print(f"Warning: found file at {cls_dir}; renaming to {new_name} to create directory")
+        new_name = cls_dir + ".txt"
+        print(
+            f"Warning: found file at {cls_dir}; renaming to {new_name} to create directory"
+        )
         os.rename(cls_dir, new_name)
     os.makedirs(cls_dir, exist_ok=True)
-    for i in range(1,4):
+    for i in range(1, 4):
         # Create a simple colored image
         # Use a deterministic-ish color based on class name + index
         color_seed = f"{cls}{i}"
-        img = Image.new('RGB', (128,128), color=(int(hash(color_seed) & 255), (i*60)%256, (i*120)%256))
+        img = Image.new(
+            "RGB",
+            (128, 128),
+            color=(int(hash(color_seed) & 255), (i * 60) % 256, (i * 120) % 256),
+        )
         draw = ImageDraw.Draw(img)
-        draw.rectangle([10,10,118,118], outline=(255,255,255), width=2)
-        draw.text((12,12), f"{cls[:6]}-{i}", fill=(255,255,255))
+        draw.rectangle([10, 10, 118, 118], outline=(255, 255, 255), width=2)
+        draw.text((12, 12), f"{cls[:6]}-{i}", fill=(255, 255, 255))
         path = os.path.join(cls_dir, f"{cls}_{i}.jpg")
-        img.save(path, 'JPEG')
+        img.save(path, "JPEG")
         print(f"  wrote {path}")
 
-print('Sample dataset created.')
+print("Sample dataset created.")
