@@ -9,3 +9,4 @@ streamlit-webrtc>=0.47.0
 kagglehub>=0.2.0
 pytest
 seaborn
+pytest-playwright
