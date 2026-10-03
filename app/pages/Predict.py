@@ -86,6 +86,58 @@ def display_predictions(probs, image_obj, threshold=0.70):
         else:
             st.image(image_obj, channels="RGB", use_column_width=True)
 
+        # Display XAI Grad-CAM if possible (requires keras model, skipped for TFLite)
+        if not hasattr(model, "get_input_details"):
+            with st.expander("🔍 View AI Reasoning (Grad-CAM)"):
+                from app.utils import (
+                    get_gradcam_heatmap,
+                    apply_gradcam_overlay,
+                    preprocess_image,
+                )
+
+                try:
+                    # Determine target size dynamically based on model
+                    try:
+                        if isinstance(model.input_shape, list):
+                            shape = model.input_shape[0]
+                        else:
+                            shape = model.input_shape
+                        h, w = shape[1], shape[2]
+                        if h is None or w is None:
+                            from app.config import IMG_SIZE
+
+                            target_size = IMG_SIZE
+                        else:
+                            target_size = (h, w)
+                    except (AttributeError, IndexError, TypeError):
+                        from app.config import IMG_SIZE
+
+                        target_size = IMG_SIZE
+
+                    if isinstance(image_obj, Image.Image):
+                        original_cv = cv2.cvtColor(
+                            np.array(image_obj.convert("RGB")), cv2.COLOR_RGB2BGR
+                        )
+                    else:
+                        original_cv = cv2.cvtColor(image_obj, cv2.COLOR_RGB2BGR)
+
+                    processed = preprocess_image(image_obj, target_size=target_size)
+                    input_batch = np.expand_dims(processed, axis=0)
+
+                    heatmap = get_gradcam_heatmap(model, input_batch)
+                    if heatmap is not None:
+                        overlay = apply_gradcam_overlay(original_cv, heatmap)
+                        overlay_rgb = cv2.cvtColor(overlay, cv2.COLOR_BGR2RGB)
+                        st.image(
+                            overlay_rgb,
+                            use_container_width=True,
+                            caption="Heatmap highlighting visual features influencing the AI",
+                        )
+                except Exception:
+                    st.info(
+                        "Grad-CAM overlay is not available for this model configuration."
+                    )
+
     with col2:
         st.markdown(
             f"""
@@ -103,14 +155,10 @@ def display_predictions(probs, image_obj, threshold=0.70):
         # Render a premium styled card for results
         if max_prob < threshold:
             badge_html = f'<span class="confidence-badge badge-low">Low Confidence ({max_prob*100:.1f}%)</span>'
-            st.warning(
-                f"The model is unsure, but it's likely **{top_class.title()}**."
-            )
+            st.warning(f"The model is unsure, but it's likely **{top_class.title()}**.")
         else:
             badge_html = f'<span class="confidence-badge badge-high">High Confidence ({max_prob*100:.1f}%)</span>'
-            st.success(
-                f"Successfully identified as **{top_class.title()}**!"
-            )
+            st.success(f"Successfully identified as **{top_class.title()}**!")
 
         st.markdown(
             f"""
@@ -201,7 +249,7 @@ with tab1:
 
                 try:
                     img_byte_arr = io.BytesIO()
-                    image.save(img_byte_arr, format="JPEG")
+                    image.convert("RGB").save(img_byte_arr, format="JPEG")
                     img_bytes = img_byte_arr.getvalue()
 
                     files = {"file": ("image.jpg", img_bytes, "image/jpeg")}

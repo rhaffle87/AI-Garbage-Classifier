@@ -13,3 +13,4 @@ pytest-playwright
 fastapi
 uvicorn
 python-multipart
+requests
