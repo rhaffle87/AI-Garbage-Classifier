@@ -6,7 +6,6 @@ predictions, and exposing classification tags.
 """
 
 import os
-import numpy as np
 from tensorflow.keras.models import load_model as keras_load_model
 from app.config import IMG_SIZE, NUM_CLASSES, MODEL_PATH, CLASS_NAMES
 
@@ -188,6 +187,19 @@ def train_model_pipeline(dataset_dir, epochs=10, model_path=None):
             shuffle=True,
         )
 
+        # Calculate class weights to handle imbalance
+        from sklearn.utils.class_weight import compute_class_weight
+        import numpy as np
+
+        if train_generator.classes is not None and len(train_generator.classes) > 0:
+            classes = np.unique(train_generator.classes)
+            weights = compute_class_weight(
+                "balanced", classes=classes, y=train_generator.classes
+            )
+            class_weights = dict(zip(classes, weights))
+        else:
+            class_weights = None
+
         if val_split > 0:
             validation_generator = train_datagen.flow_from_directory(
                 dataset_dir,
@@ -284,11 +296,16 @@ def train_model_pipeline(dataset_dir, epochs=10, model_path=None):
     except ImportError:
         pass
 
+    kwargs = {}
+    if "class_weights" in locals() and class_weights is not None:
+        kwargs["class_weight"] = class_weights
+
     history = model.fit(
         train_generator,
         validation_data=validation_generator,
         epochs=epochs,
         callbacks=callbacks_list,
+        **kwargs,
     )
 
     # =====================================================================
@@ -316,6 +333,7 @@ def train_model_pipeline(dataset_dir, epochs=10, model_path=None):
         validation_data=validation_generator,
         epochs=fine_tune_epochs,
         callbacks=callbacks_list,
+        **kwargs,
     )
 
     # Restore best checkpointed model weights if saved

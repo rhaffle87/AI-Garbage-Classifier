@@ -246,3 +246,77 @@ def load_tfrecord_dataset(tfrecord_path, batch_size=32, target_size=None):
     dataset = dataset.batch(batch_size)
     dataset = dataset.prefetch(buffer_size=tf.data.AUTOTUNE)
     return dataset
+
+
+def get_gradcam_heatmap(model, img_array, last_conv_layer_name=None):
+    """
+    Generate a Grad-CAM heatmap for a given image array and model.
+    """
+    import tensorflow as tf
+
+    # Only supported for standard Keras models
+    if hasattr(model, "get_input_details"):
+        return None
+
+    # Try to find the last conv layer if not provided
+    if last_conv_layer_name is None:
+        for layer in reversed(model.layers):
+            if isinstance(layer, tf.keras.Model):
+                for inner_layer in reversed(layer.layers):
+                    if len(inner_layer.output_shape) == 4:
+                        last_conv_layer_name = inner_layer.name
+                        model = layer
+                        break
+            if len(layer.output_shape) == 4:
+                last_conv_layer_name = layer.name
+                break
+
+    if last_conv_layer_name is None:
+        return None
+
+    try:
+        grad_model = tf.keras.models.Model(
+            [model.inputs], [model.get_layer(last_conv_layer_name).output, model.output]
+        )
+
+        with tf.GradientTape() as tape:
+            last_conv_layer_output, preds = grad_model(img_array)
+            pred_index = tf.argmax(preds[0])
+            class_channel = preds[:, pred_index]
+
+        grads = tape.gradient(class_channel, last_conv_layer_output)
+        pooled_grads = tf.reduce_mean(grads, axis=(0, 1, 2))
+
+        last_conv_layer_output = last_conv_layer_output[0]
+        heatmap = last_conv_layer_output @ pooled_grads[..., tf.newaxis]
+        heatmap = tf.squeeze(heatmap)
+
+        heatmap = tf.maximum(heatmap, 0) / tf.math.reduce_max(heatmap)
+        return heatmap.numpy()
+    except Exception as e:
+        import logging
+
+        logging.warning(f"Could not compute Grad-CAM heatmap: {e}")
+        return None
+
+
+def apply_gradcam_overlay(img, heatmap, alpha=0.4, colormap=None):
+    """
+    Overlay the heatmap on the original image.
+    """
+    import cv2
+    import numpy as np
+
+    if colormap is None:
+        colormap = cv2.COLORMAP_JET
+
+    # Resize heatmap to match image dimensions
+    heatmap = cv2.resize(heatmap, (img.shape[1], img.shape[0]))
+
+    # Scale heatmap to [0, 255] and apply colormap
+    heatmap = np.uint8(255 * heatmap)
+    heatmap = cv2.applyColorMap(heatmap, colormap)
+
+    # Overlay heatmap on original image
+    superimposed_img = heatmap * alpha + img * (1 - alpha)
+    return np.uint8(superimposed_img)

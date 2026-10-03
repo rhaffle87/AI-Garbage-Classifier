@@ -103,12 +103,12 @@ def display_predictions(probs, image_obj, threshold=0.70):
         # Render a premium styled card for results
         if max_prob < threshold:
             badge_html = f'<span class="confidence-badge badge-low">Low Confidence ({max_prob*100:.1f}%)</span>'
-            status_alert = st.warning(
+            st.warning(
                 f"The model is unsure, but it's likely **{top_class.title()}**."
             )
         else:
             badge_html = f'<span class="confidence-badge badge-high">High Confidence ({max_prob*100:.1f}%)</span>'
-            status_alert = st.success(
+            st.success(
                 f"Successfully identified as **{top_class.title()}**!"
             )
 
@@ -191,9 +191,29 @@ with tab1:
     if uploaded_file is not None:
         try:
             with st.spinner("Processing image via neural network..."):
+                import requests
+                import io
+                import os
+
+                api_url = os.environ.get("API_URL", "http://localhost:8000/predict")
                 image = Image.open(uploaded_file)
                 image.load()  # Fully load image data to catch corruptions immediately
-                probs = predict(model, image)
+
+                try:
+                    img_byte_arr = io.BytesIO()
+                    image.save(img_byte_arr, format="JPEG")
+                    img_bytes = img_byte_arr.getvalue()
+
+                    files = {"file": ("image.jpg", img_bytes, "image/jpeg")}
+                    response = requests.post(api_url, files=files, timeout=2.0)
+                    if response.status_code == 200:
+                        probs = response.json()["predictions"]
+                    else:
+                        raise RuntimeError(f"API Error: {response.text}")
+                except (requests.exceptions.RequestException, RuntimeError):
+                    # Fallback to local inference
+                    probs = predict(model, image)
+
                 st.divider()
                 display_predictions(probs, image, threshold=confidence_threshold)
         except Exception as e:
@@ -225,7 +245,30 @@ with tab2:
                         st.error("❌ Failed to capture image from camera stream.")
                     else:
                         frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-                        probs = predict(model, frame_rgb)
+
+                        import requests
+                        import os
+
+                        api_url = os.environ.get(
+                            "API_URL", "http://localhost:8000/predict"
+                        )
+                        try:
+                            is_success, buffer = cv2.imencode(
+                                ".jpg", cv2.cvtColor(frame_rgb, cv2.COLOR_RGB2BGR)
+                            )
+                            if not is_success:
+                                raise ValueError("Could not encode image buffer")
+                            img_bytes = buffer.tobytes()
+
+                            files = {"file": ("image.jpg", img_bytes, "image/jpeg")}
+                            response = requests.post(api_url, files=files, timeout=2.0)
+                            if response.status_code == 200:
+                                probs = response.json()["predictions"]
+                            else:
+                                raise RuntimeError(f"API Error: {response.text}")
+                        except (requests.exceptions.RequestException, RuntimeError):
+                            probs = predict(model, frame_rgb)
+
                         st.divider()
                         display_predictions(
                             probs, frame_rgb, threshold=confidence_threshold
@@ -257,10 +300,33 @@ with tab3:
                 self.lock = threading.Lock()
 
             def _async_predict(self, rgb_copy):
+                import requests
                 from app.model import predict
+                import os
+                import cv2
+
+                api_url = os.environ.get("API_URL", "http://localhost:8000/predict")
 
                 try:
+                    is_success, buffer = cv2.imencode(
+                        ".jpg", cv2.cvtColor(rgb_copy, cv2.COLOR_RGB2BGR)
+                    )
+                    if not is_success:
+                        raise ValueError("Could not encode image buffer")
+                    img_bytes = buffer.tobytes()
+
+                    files = {"file": ("image.jpg", img_bytes, "image/jpeg")}
+                    response = requests.post(api_url, files=files, timeout=2.0)
+
+                    if response.status_code == 200:
+                        preds = response.json()["predictions"]
+                    else:
+                        raise RuntimeError(f"API Error: {response.text}")
+                except (requests.exceptions.RequestException, RuntimeError):
+                    # Fallback to local inference
                     preds = predict(self.model, rgb_copy)
+
+                try:
                     with self.lock:
                         self.last_preds = preds
                 except Exception:
