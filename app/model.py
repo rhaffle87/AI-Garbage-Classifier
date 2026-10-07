@@ -12,33 +12,57 @@ from app.config import IMG_SIZE, NUM_CLASSES, MODEL_PATH, CLASS_NAMES
 
 
 def load_model(model_path=None):
-    """Loads a pre-trained Keras/TensorFlow classification model.
+    """Loads a pre-trained Keras/TensorFlow or TFLite classification model.
 
     If the requested model file is missing, falls back to loading a legacy
     checkpoint path, or creates and compiles a lightweight fallback architecture.
 
     Args:
-        model_path (str, optional): Target file path to .keras or .h5 file. Defaults to MODEL_PATH.
+        model_path (str, optional): Target file path to .tflite, .keras or .h5 file. Defaults to MODEL_PATH.
 
     Returns:
-        tf.keras.Model: The compiled Keras model object.
+        tf.keras.Model or tf.lite.Interpreter: The model object.
     """
+    import tensorflow as tf
     from app.config import PROD_MODEL_PATH, MODEL_PATH, LEGACY_MODEL_PATH
 
+    tflite_path = None
     if model_path is None:
+        if os.path.exists(PROD_MODEL_PATH.replace(".h5", ".tflite")):
+            tflite_path = PROD_MODEL_PATH.replace(".h5", ".tflite")
+        elif os.path.exists(MODEL_PATH.replace(".h5", ".tflite")):
+            tflite_path = MODEL_PATH.replace(".h5", ".tflite")
+
         if os.path.exists(PROD_MODEL_PATH):
             model_path = PROD_MODEL_PATH
         elif os.path.exists(MODEL_PATH):
             model_path = MODEL_PATH
         else:
             model_path = LEGACY_MODEL_PATH
+    else:
+        if model_path.endswith(".tflite") and os.path.exists(model_path):
+            tflite_path = model_path
+        elif os.path.exists(
+            model_path.replace(".h5", ".tflite").replace(".keras", ".tflite")
+        ):
+            tflite_path = model_path.replace(".h5", ".tflite").replace(
+                ".keras", ".tflite"
+            )
 
     try:
+        if tflite_path is not None and os.path.exists(tflite_path):
+            interpreter = tf.lite.Interpreter(model_path=tflite_path)
+            interpreter.allocate_tensors()
+            interpreter._is_fallback = False
+            interpreter._is_tflite = True
+            return interpreter
+
         if os.path.exists(model_path):
             m = keras_load_model(model_path)
         else:
             raise FileNotFoundError("Model file not found")
         m._is_fallback = False
+        m._is_tflite = False
         return m
     except Exception as e:
 
@@ -59,6 +83,7 @@ def load_model(model_path=None):
         )
         fallback.compile(optimizer="adam", loss="sparse_categorical_crossentropy")
         fallback._is_fallback = True
+        fallback._is_tflite = False
         return fallback
 
 
@@ -272,11 +297,26 @@ def train_model_pipeline(dataset_dir, epochs=10, model_path=None):
     except ImportError:
         pass
 
+    from sklearn.utils.class_weight import compute_class_weight
+    import numpy as np
+
+    if hasattr(train_generator, "classes"):
+        class_weights = compute_class_weight(
+            class_weight="balanced",
+            classes=np.unique(train_generator.classes),
+            y=train_generator.classes,
+        )
+        class_weight_dict = dict(enumerate(class_weights))
+    else:
+        # Fallback for TFRecord datasets which might not expose .classes easily
+        class_weight_dict = None
+
     history = model.fit(
         train_generator,
         validation_data=validation_generator,
         epochs=epochs,
         callbacks=callbacks_list,
+        class_weight=class_weight_dict,
     )
 
     # =====================================================================
@@ -304,6 +344,7 @@ def train_model_pipeline(dataset_dir, epochs=10, model_path=None):
         validation_data=validation_generator,
         epochs=fine_tune_epochs,
         callbacks=callbacks_list,
+        class_weight=class_weight_dict,
     )
 
     # Restore best checkpointed model weights if saved
@@ -321,6 +362,22 @@ def train_model_pipeline(dataset_dir, epochs=10, model_path=None):
 
     logging.info(f"Model saved to {model_path}")
     print(f"[SUCCESS] Model successfully saved to {model_path}")
+
+    # Export to TFLite
+    try:
+        tflite_path = model_path.replace(".h5", ".tflite").replace(".keras", ".tflite")
+        if tflite_path == model_path:
+            tflite_path = model_path + ".tflite"
+        converter = tf.lite.TFLiteConverter.from_keras_model(model)
+        tflite_model = converter.convert()
+        with open(tflite_path, "wb") as f:
+            f.write(tflite_model)
+        logging.info(f"TFLite model successfully saved to {tflite_path}")
+        print(f"[SUCCESS] TFLite model successfully saved to {tflite_path}")
+    except Exception as e:
+        logging.error(f"Failed to convert model to TFLite: {e}")
+        print(f"[ERROR] Failed to convert model to TFLite: {e}")
+
     return model, history
 
 
@@ -329,9 +386,10 @@ def predict(model, image):
 
     Inspects the model input layer properties to dynamically resize the input image,
     normalizes it, feeds it to the model, and outputs the raw softmax category probabilities.
+    Supports both Keras models and TFLite Interpreters.
 
     Args:
-        model (tf.keras.Model): Loaded classification model.
+        model (tf.keras.Model or tf.lite.Interpreter): Loaded classification model.
         image (str or np.ndarray or PIL.Image.Image): File path or image array to classify.
 
     Returns:
@@ -340,13 +398,20 @@ def predict(model, image):
     from app.utils import preprocess_image
 
     # Determine the model's expected input dimensions dynamically
+    is_tflite = getattr(model, "_is_tflite", False)
+
     try:
-        if isinstance(model.input_shape, list):
-            shape = model.input_shape[0]
+        if is_tflite:
+            input_details = model.get_input_details()
+            shape = input_details[0]["shape"]
+            h, w = shape[1], shape[2]
         else:
-            shape = model.input_shape
-        # shape format is (None, height, width, channels)
-        h, w = shape[1], shape[2]
+            if isinstance(model.input_shape, list):
+                shape = model.input_shape[0]
+            else:
+                shape = model.input_shape
+            h, w = shape[1], shape[2]
+
         if h is None or w is None:
             from app.config import IMG_SIZE
 
@@ -368,8 +433,17 @@ def predict(model, image):
     else:
         processed = preprocess_image(image, target_size=target_size)
 
-    input_batch = np.expand_dims(processed, axis=0)
-    preds = model.predict(input_batch)
+    input_batch = np.expand_dims(processed, axis=0).astype(np.float32)
+
+    if is_tflite:
+        input_details = model.get_input_details()
+        output_details = model.get_output_details()
+        model.set_tensor(input_details[0]["index"], input_batch)
+        model.invoke()
+        preds = model.get_tensor(output_details[0]["index"])
+    else:
+        preds = model.predict(input_batch)
+
     return preds.tolist()[0]
 
 
