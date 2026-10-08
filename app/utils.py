@@ -211,6 +211,108 @@ def write_tfrecords(dataset_path, output_tfrecord_path):
     writer.close()
 
 
+def generate_gradcam(model, image, class_index, layer_name=None):
+    """Generates a Grad-CAM heatmap for explainability.
+
+    Args:
+        model: The trained Keras model (tf.keras.Model). Note: Grad-CAM requires Keras models, not TFLite.
+        image (np.ndarray): The preprocessed input image array of shape (1, H, W, 3).
+        class_index (int): The index of the predicted class.
+        layer_name (str, optional): Target convolutional layer name. Defaults to the last Conv2D layer in MobileNetV2.
+
+    Returns:
+        np.ndarray: The generated heatmap resized to the original image dimensions, or None if generation fails.
+    """
+    import tensorflow as tf
+
+    # TFLite Interpreters do not expose intermediate gradients, return None gracefully
+    if getattr(model, "_is_tflite", False):
+        import logging
+
+        logging.warning(
+            "Grad-CAM cannot be generated using a TFLite model. Skipping explainability."
+        )
+        return None
+
+    try:
+        if layer_name is None:
+            # Dynamically find the last conv layer if we have a MobileNetV2 base model
+            for layer in reversed(model.layers):
+                if isinstance(
+                    layer, tf.keras.Model
+                ):  # It's the base_model (MobileNetV2)
+                    for inner_layer in reversed(layer.layers):
+                        if "conv" in inner_layer.name.lower() or isinstance(
+                            inner_layer, tf.keras.layers.Conv2D
+                        ):
+                            layer_name = inner_layer.name
+                            target_model = layer
+                            break
+                    break
+
+            if layer_name is None:
+                target_model = model
+                for layer in reversed(model.layers):
+                    if "conv" in layer.name.lower() or isinstance(
+                        layer, tf.keras.layers.Conv2D
+                    ):
+                        layer_name = layer.name
+                        break
+        else:
+            target_model = model
+
+        if layer_name is None:
+            return None
+
+        grad_model = tf.keras.models.Model(
+            [target_model.inputs],
+            [target_model.get_layer(layer_name).output, target_model.output],
+        )
+
+        with tf.GradientTape() as tape:
+            conv_outputs, predictions = grad_model(image)
+            loss = predictions[:, class_index]
+
+        grads = tape.gradient(loss, conv_outputs)
+        pooled_grads = tf.reduce_mean(grads, axis=(0, 1, 2))
+
+        conv_outputs = conv_outputs[0]
+        heatmap = conv_outputs @ pooled_grads[..., tf.newaxis]
+        heatmap = tf.squeeze(heatmap)
+        heatmap = tf.maximum(heatmap, 0) / tf.math.reduce_max(heatmap)
+
+        return heatmap.numpy()
+
+    except Exception as e:
+        import logging
+
+        logging.error(f"Failed to generate Grad-CAM: {e}")
+        return None
+
+
+def overlay_heatmap(heatmap, original_image, alpha=0.4, colormap=cv2.COLORMAP_JET):
+    """Overlays a Grad-CAM heatmap onto the original image.
+
+    Args:
+        heatmap (np.ndarray): The 2D heatmap.
+        original_image (np.ndarray): The original RGB image (H, W, 3) in [0, 255].
+        alpha (float): Overlay opacity.
+        colormap (int): OpenCV colormap index.
+
+    Returns:
+        np.ndarray: The composited image.
+    """
+    if heatmap is None:
+        return original_image
+
+    heatmap = cv2.resize(heatmap, (original_image.shape[1], original_image.shape[0]))
+    heatmap = np.uint8(255 * heatmap)
+    heatmap = cv2.applyColorMap(heatmap, colormap)
+
+    superimposed_img = heatmap * alpha + original_image * (1 - alpha)
+    return np.clip(superimposed_img, 0, 255).astype(np.uint8)
+
+
 def load_tfrecord_dataset(tfrecord_path, batch_size=32, target_size=None):
     """Loads and decodes a TFRecord dataset into a tf.data.Dataset ready for training.
 

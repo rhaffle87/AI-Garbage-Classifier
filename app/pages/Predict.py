@@ -66,7 +66,7 @@ RECYCLING_TIPS = {
 }
 
 
-def display_predictions(probs, image_obj, threshold=0.70):
+def display_predictions(probs, image_obj, threshold=0.70, heatmap_img=None):
     col1, col2 = st.columns([1.1, 1])
 
     with col1:
@@ -79,10 +79,22 @@ def display_predictions(probs, image_obj, threshold=0.70):
         """,
             unsafe_allow_html=True,
         )
-        if isinstance(image_obj, Image.Image):
-            st.image(image_obj, use_column_width=True)
-        else:
-            st.image(image_obj, channels="RGB", use_column_width=True)
+
+        tab_img1, tab_img2 = st.tabs(["Original", "Grad-CAM Heatmap"])
+
+        with tab_img1:
+            if isinstance(image_obj, Image.Image):
+                st.image(image_obj, use_column_width=True)
+            else:
+                st.image(image_obj, channels="RGB", use_column_width=True)
+
+        with tab_img2:
+            if heatmap_img is not None:
+                st.image(heatmap_img, channels="RGB", use_column_width=True)
+            else:
+                st.info(
+                    "Grad-CAM heatmap is not available for this model (e.g., TFLite)."
+                )
 
     with col2:
         st.markdown(
@@ -191,9 +203,82 @@ with tab1:
             with st.spinner("Processing image via neural network..."):
                 image = Image.open(uploaded_file)
                 image.load()  # Fully load image data to catch corruptions immediately
-                probs = predict(model, image)
+                # Check if FastAPI backend is available, otherwise fallback to local execution
+                import requests
+                import io
+                import base64
+
+                try:
+                    # Reset pointer to start to send file
+                    uploaded_file.seek(0)
+                    files = {"file": ("image.jpg", uploaded_file, "image/jpeg")}
+                    # For a robust implementation, the URL would be configured in config.py
+                    response = requests.post(
+                        "http://localhost:8000/predict", files=files, timeout=2.0
+                    )
+                    response.raise_for_status()
+                    result = response.json()
+
+                    probs = result["probs"]
+                    heatmap_base64 = result.get("heatmap_base64")
+                    heatmap_overlay = None
+                    if heatmap_base64:
+                        heatmap_bytes = base64.b64decode(heatmap_base64)
+                        heatmap_overlay = Image.open(io.BytesIO(heatmap_bytes))
+
+                    if result.get("cached"):
+                        st.toast("Result loaded from cache! ⚡", icon="🚀")
+
+                except (requests.exceptions.RequestException, ConnectionError) as api_e:
+                    # Fallback to local inference if FastAPI is down or not started
+                    probs = predict(model, image)
+
+                    # Grad-CAM XAI
+                    heatmap_overlay = None
+                    if not getattr(model, "_is_tflite", False):
+                        try:
+                            from app.utils import (
+                                preprocess_image,
+                                generate_gradcam,
+                                overlay_heatmap,
+                            )
+
+                            # Determine model target size
+                            try:
+                                if isinstance(model.input_shape, list):
+                                    shape = model.input_shape[0]
+                                else:
+                                    shape = model.input_shape
+                                h, w = shape[1], shape[2]
+                                target_size = (
+                                    (h, w) if h is not None and w is not None else None
+                                )
+                            except:
+                                target_size = None
+
+                            processed_img = preprocess_image(
+                                image, target_size=target_size
+                            )
+                            input_batch = np.expand_dims(processed_img, axis=0)
+                            top_idx = int(np.argmax(probs))
+
+                            heatmap = generate_gradcam(model, input_batch, top_idx)
+                            if heatmap is not None:
+                                img_rgb = image.convert("RGB")
+                                img_np = np.array(img_rgb)
+                                heatmap_overlay = overlay_heatmap(heatmap, img_np)
+                        except Exception as e:
+                            import logging
+
+                            logging.warning(f"Grad-CAM overlay failed: {e}")
+
                 st.divider()
-                display_predictions(probs, image, threshold=confidence_threshold)
+                display_predictions(
+                    probs,
+                    image,
+                    threshold=confidence_threshold,
+                    heatmap_img=heatmap_overlay,
+                )
         except Exception as e:
             st.error(
                 f"❌ Could not process uploaded image. The file may be corrupted, truncated, or in an unsupported format. Error detail: {str(e)}"
@@ -224,9 +309,54 @@ with tab2:
                     else:
                         frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
                         probs = predict(model, frame_rgb)
+
+                        heatmap_overlay = None
+                        if not getattr(model, "_is_tflite", False):
+                            try:
+                                from app.utils import (
+                                    preprocess_image,
+                                    generate_gradcam,
+                                    overlay_heatmap,
+                                )
+
+                                try:
+                                    if isinstance(model.input_shape, list):
+                                        shape = model.input_shape[0]
+                                    else:
+                                        shape = model.input_shape
+                                    h, w = shape[1], shape[2]
+                                    target_size = (
+                                        (h, w)
+                                        if h is not None and w is not None
+                                        else None
+                                    )
+                                except:
+                                    target_size = None
+
+                                processed_img = preprocess_image(
+                                    frame_rgb, target_size=target_size
+                                )
+                                input_batch = np.expand_dims(processed_img, axis=0)
+                                top_idx = int(np.argmax(probs))
+
+                                heatmap = generate_gradcam(model, input_batch, top_idx)
+                                if heatmap is not None:
+                                    heatmap_overlay = overlay_heatmap(
+                                        heatmap, frame_rgb
+                                    )
+                            except Exception as e:
+                                import logging
+
+                                logging.warning(
+                                    f"Grad-CAM overlay failed on webcam: {e}"
+                                )
+
                         st.divider()
                         display_predictions(
-                            probs, frame_rgb, threshold=confidence_threshold
+                            probs,
+                            frame_rgb,
+                            threshold=confidence_threshold,
+                            heatmap_img=heatmap_overlay,
                         )
             except Exception as ce:
                 st.error(f"❌ Camera access error: {str(ce)}")
